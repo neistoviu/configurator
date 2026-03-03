@@ -33,20 +33,10 @@
       flex-shrink: 0; gap: 12px;
     }
 
-    .logo-wrap { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
-    .logo-mark {
-      width: 30px; height: 30px; border: 2px solid var(--accent);
-      border-radius: 50%; display: flex; align-items: center;
-      justify-content: center; font-size: 12px; font-weight: 800;
-      color: var(--accent);
-    }
-    .logo-text {
-      font-size: 13px; font-weight: 700;
-      letter-spacing: 0.14em; text-transform: uppercase;
-    }
-    .logo-text span { color: var(--accent); }
+    .logo-wrap { display: flex; align-items: center; flex-shrink: 0; }
+    .logo-img { height: 22px; width: auto; display: block; }
 
-    /* Model selector pills */
+    /* Model selector pills (desktop) */
     .model-selector {
       display: flex; gap: 5px;
       margin-left: 20px;
@@ -73,6 +63,11 @@
       font-size: 8px; opacity: 0.7;
       display: block; margin-top: 1px; font-weight: 400;
       letter-spacing: 0.05em;
+    }
+
+    /* Model selector dropdown (mobile only) */
+    #model-dropdown {
+      display: none;
     }
 
     .header-right {
@@ -240,13 +235,27 @@
       body { height: 100vh; height: 100dvh; overflow: hidden; }
 
       header {
-        height: 48px; padding: 0 12px; gap: 8px;
+        height: 44px; padding: 0 12px; gap: 8px;
+        background: transparent; border-bottom: none;
+        position: absolute; top: 0; left: 0; right: 0;
+        z-index: 15;
       }
-      .logo-mark { width: 24px; height: 24px; font-size: 10px; }
-      .logo-text { font-size: 11px; }
-      .model-selector { margin-left: 8px; gap: 3px; }
-      .model-btn { padding: 4px 10px; font-size: 8px; }
-      .model-btn .soon { font-size: 6px; }
+      .logo-img { height: 18px; }
+      .model-selector { display: none; }
+      #model-dropdown {
+        display: block; margin-left: auto;
+        background: rgba(20,21,26,0.7); color: var(--text);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 8px; padding: 5px 28px 5px 10px;
+        font-size: 10px; font-weight: 600;
+        letter-spacing: 0.04em;
+        -webkit-appearance: none; appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%235a5a64'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        cursor: pointer; outline: none;
+      }
+      #model-dropdown option { background: #14151a; color: var(--text); }
       .header-right { display: none; }
 
       .main {
@@ -254,18 +263,18 @@
       }
 
       #canvas-col { flex: 1; min-height: 0; }
-      #canvas-wrap { flex: 1; }
+      #canvas-wrap { flex: 1; padding-top: 0; }
 
       #info-strip {
         display: block;
-        position: absolute; top: 6px; left: 10px; right: 10px;
+        position: absolute; top: 44px; left: 12px; right: 12px;
         border: none; padding: 0; z-index: 5;
-        pointer-events: none;
+        pointer-events: none; background: none;
       }
       .info-text {
-        font-size: 8px !important; line-height: 1.4 !important;
-        color: rgba(255,255,255,0.22) !important;
-        max-width: none;
+        font-size: 10px !important; line-height: 1.5 !important;
+        color: rgba(255,255,255,0.28) !important;
+        max-width: none; text-align: left;
       }
 
       #bottom-bar {
@@ -275,49 +284,45 @@
       #bottom-bar .bar-label { font-size: 8px; }
       #bottom-bar .bar-val { font-size: 9px; }
       #light-slider { width: 80px; }
-      #hint { font-size: 9px; top: 8px; display: none; }
+      #hint { display: none; }
 
       .sidebar {
         width: 100%; flex-shrink: 0;
         border-left: none; border-top: 1px solid var(--border);
         flex-direction: column;
-        max-height: 38vh;
+        max-height: none;
       }
 
       .color-block {
         flex: none; overflow-x: hidden; overflow-y: hidden;
-        padding: 8px 12px 6px; min-height: 0;
+        padding: 6px 12px; min-height: 0;
       }
       .color-block + .color-block { border-top: 1px solid var(--border); }
 
       .color-section {
-        display: flex; flex-direction: column;
-        gap: 4px; margin-bottom: 0;
+        display: flex; align-items: center;
+        gap: 6px; margin-bottom: 0;
       }
 
       .section-label {
         position: static; background: none;
-        padding: 0; margin-bottom: 2px;
-        font-size: 8px; white-space: nowrap;
-        flex-shrink: 0;
-      }
-
-      .mob-color-row {
-        display: flex; align-items: center; gap: 8px;
+        padding: 0; margin-bottom: 0;
+        font-size: 7px; white-space: nowrap;
+        flex-shrink: 0; min-width: 38px;
       }
 
       .selected-row {
-        flex-shrink: 0; padding: 4px 8px; margin-bottom: 0;
-        border-radius: 6px; gap: 6px;
+        flex-shrink: 0; padding: 3px 6px; margin-bottom: 0;
+        border-radius: 5px; gap: 5px;
       }
-      .sel-swatch { width: 24px; height: 24px; border-radius: 4px; }
-      .sel-info .ral-code { font-size: 10px; }
-      .sel-info .ral-name { font-size: 9px; }
+      .sel-swatch { width: 22px; height: 22px; border-radius: 3px; }
+      .sel-info .ral-code { font-size: 9px; }
+      .sel-info .ral-name { display: none; }
 
       .search { display: none; }
 
       .ral-grid {
-        display: flex; flex-wrap: nowrap; gap: 4px;
+        display: flex; flex-wrap: nowrap; gap: 3px;
         overflow-x: auto; overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
         padding-bottom: 2px; flex: 1; min-width: 0;
@@ -478,8 +483,7 @@
 
 <header>
   <div class="logo-wrap">
-    <div class="logo-mark">T</div>
-    <div class="logo-text">Typhoon <span>Roasters</span></div>
+    <img src="logo.png" alt="Typhoon Roasters" class="logo-img">
   </div>
 
   <div class="model-selector">
@@ -493,6 +497,12 @@
       <span class="soon">coming soon</span>
     </button>
   </div>
+
+  <select id="model-dropdown">
+    <option value="10pro" selected>Typhoon 10 PRO</option>
+    <option value="5pro" disabled>Typhoon 5 PRO — coming soon</option>
+    <option value="2pro" disabled>Typhoon 2.5 PRO — coming soon</option>
+  </select>
 
   <div class="header-right">Configurator</div>
 </header>
@@ -1114,6 +1124,17 @@ buildPicker({ gridId:'g-body', searchId:'s-body', swatchId:'body-sw',
               codeId:'body-code', nameId:'body-name', group:'body' });
 buildPicker({ gridId:'g-acc',  searchId:'s-acc',  swatchId:'acc-sw',
               codeId:'acc-code',  nameId:'acc-name',  group:'accent' });
+
+// ── Mobile model dropdown ──
+const modelDropdown = document.getElementById('model-dropdown');
+modelDropdown.addEventListener('change', () => {
+  const val = modelDropdown.value;
+  if (val === currentModel) return;
+  document.querySelectorAll('.model-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.model === val);
+  });
+  loadModel(val);
+});
 
 // ── Get an Offer modal ──
 const ofOverlay = document.getElementById('offer-overlay');
