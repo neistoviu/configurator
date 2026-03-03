@@ -85,7 +85,7 @@
     /* ── Layout ── */
     .main { display: flex; flex: 1; overflow: hidden; }
 
-    #canvas-wrap { flex: 1; position: relative; cursor: grab; }
+    #canvas-wrap { flex: 1; position: relative; cursor: grab; overflow: hidden; }
     #canvas-wrap:active { cursor: grabbing; }
     #canvas-wrap canvas { display: block; }
 
@@ -218,12 +218,13 @@
     #info-strip {
       flex-shrink: 0;
       border-top: 1px solid var(--border);
-      padding: 18px 40px 20px;
+      padding: 14px 40px 16px;
       display: flex; align-items: center; justify-content: center;
       text-align: center;
+      background: var(--bg);
     }
     .info-text {
-      font-size: 16px;
+      font-size: 14px;
       line-height: 1.7;
       color: var(--muted);
       max-width: 760px;
@@ -255,7 +256,17 @@
       #canvas-col { flex: 1; min-height: 0; }
       #canvas-wrap { flex: 1; }
 
-      #info-strip { display: none; }
+      #info-strip {
+        display: block;
+        position: absolute; top: 6px; left: 10px; right: 10px;
+        border: none; padding: 0; z-index: 5;
+        pointer-events: none;
+      }
+      .info-text {
+        font-size: 8px !important; line-height: 1.4 !important;
+        color: rgba(255,255,255,0.22) !important;
+        max-width: none;
+      }
 
       #bottom-bar {
         bottom: 10px; padding: 6px 14px; gap: 8px;
@@ -264,35 +275,42 @@
       #bottom-bar .bar-label { font-size: 8px; }
       #bottom-bar .bar-val { font-size: 9px; }
       #light-slider { width: 80px; }
-      #hint { font-size: 9px; top: 8px; }
+      #hint { font-size: 9px; top: 8px; display: none; }
 
       .sidebar {
         width: 100%; flex-shrink: 0;
         border-left: none; border-top: 1px solid var(--border);
         flex-direction: column;
-        max-height: 42vh;
+        max-height: 38vh;
       }
 
       .color-block {
-        flex: none; overflow-x: auto; overflow-y: hidden;
-        padding: 10px 12px 8px; min-height: 0;
+        flex: none; overflow-x: hidden; overflow-y: hidden;
+        padding: 8px 12px 6px; min-height: 0;
       }
       .color-block + .color-block { border-top: 1px solid var(--border); }
 
-      .color-section { display: flex; align-items: center; gap: 10px; margin-bottom: 0; }
+      .color-section {
+        display: flex; flex-direction: column;
+        gap: 4px; margin-bottom: 0;
+      }
 
       .section-label {
-        writing-mode: horizontal-tb;
-        white-space: nowrap; margin-bottom: 0;
-        flex-shrink: 0; font-size: 8px;
-        min-width: 50px;
+        position: static; background: none;
+        padding: 0; margin-bottom: 2px;
+        font-size: 8px; white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .mob-color-row {
+        display: flex; align-items: center; gap: 8px;
       }
 
       .selected-row {
-        flex-shrink: 0; padding: 5px 8px; margin-bottom: 0;
+        flex-shrink: 0; padding: 4px 8px; margin-bottom: 0;
         border-radius: 6px; gap: 6px;
       }
-      .sel-swatch { width: 26px; height: 26px; border-radius: 4px; }
+      .sel-swatch { width: 24px; height: 24px; border-radius: 4px; }
       .sel-info .ral-code { font-size: 10px; }
       .sel-info .ral-name { font-size: 9px; }
 
@@ -302,19 +320,19 @@
         display: flex; flex-wrap: nowrap; gap: 4px;
         overflow-x: auto; overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
-        padding-bottom: 2px;
+        padding-bottom: 2px; flex: 1; min-width: 0;
       }
       .ral-grid::-webkit-scrollbar { height: 3px; }
       .ral-grid::-webkit-scrollbar-thumb { background: #3a3a48; border-radius: 2px; }
 
       .sw {
-        width: 30px; height: 30px; min-width: 30px;
+        width: 28px; height: 28px; min-width: 28px;
         aspect-ratio: auto; border-radius: 4px; flex-shrink: 0;
       }
       .sw:hover { transform: none; }
 
       #offer-btn {
-        width: calc(100% - 24px); margin: 8px 12px 10px;
+        width: calc(100% - 24px); margin: 6px 12px 10px;
         padding: 11px 0; font-size: 11px;
         border-radius: 8px;
       }
@@ -491,18 +509,17 @@
         <span class="bar-label">Rotate</span>
         <button id="play-btn" class="playing">⏸</button>
       </div>
-    </div>
-
-    <!-- ── Infographic strip ── -->
-    <div id="info-strip">
-      <p class="info-text">
-        (Compared to a drum roaster, savings with the Typhoon 10 PRO are about
-        <span class="n-total">€5,572 per month</span> at the same utilisation:
-        labour — <span class="n-labour">€1,594</span>;
-        electricity — <span class="n-elec">€731</span>;
-        reduced defects — <span class="n-defect">€3,247</span>.
-        At 50% utilisation, payback is approximately <span class="n-pay">2 months</span>.)
-      </p>
+      <!-- Info strip: below canvas on desktop, overlaid on mobile -->
+      <div id="info-strip">
+        <p class="info-text">
+          (Compared to a drum roaster, savings with the Typhoon 10 PRO are about
+          <span class="n-total">€5,572 per month</span> at the same utilisation:
+          labour — <span class="n-labour">€1,594</span>;
+          electricity — <span class="n-elec">€731</span>;
+          reduced defects — <span class="n-defect">€3,247</span>.
+          At 50% utilisation, payback is approximately <span class="n-pay">2 months</span>.)
+        </p>
+      </div>
     </div>
   </div>
 
