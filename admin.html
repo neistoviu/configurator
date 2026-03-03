@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typhoon Configurator</title>
+  <style>
+    :root {
+      --bg: #111214;
+      --panel: #18191c;
+      --border: #27282c;
+      --text: #e2e2e2;
+      --muted: #6a6a70;
+      --accent: #d4a847;
+      --panel-w: 304px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      gap: 8px;
+    }
+    .logo-mark {
+      width: 28px; height: 28px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; color: var(--accent);
+      letter-spacing: 0;
+      flex-shrink: 0;
+    }
+    .logo-text {
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+    }
+    .logo-text span { color: var(--accent); }
+    .header-tag {
+      margin-left: auto;
+      font-size: 10px; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 3px 10px; border-radius: 20px;
+    }
+
+    /* ── Layout ── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    #canvas-wrap {
+      flex: 1;
+      position: relative;
+      cursor: grab;
+    }
+    #canvas-wrap:active { cursor: grabbing; }
+    #canvas-wrap canvas { display: block; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--panel-w);
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 18px;
+    }
+    .sidebar-scroll::-webkit-scrollbar { width: 3px; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+    /* ── Color section ── */
+    .color-section { margin-bottom: 24px; }
+
+    .section-label {
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .selected-row {
+      display: flex; align-items: center; gap: 10px;
+      background: #1f2024;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      margin-bottom: 10px;
+    }
+    .sel-swatch {
+      width: 32px; height: 32px;
+      border-radius: 5px;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      flex-shrink: 0;
+      background: #2a2a2a;
+    }
+    .sel-info .ral-code { font-size: 12px; font-weight: 600; }
+    .sel-info .ral-name { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    .search {
+      width: 100%;
+      background: #1f2024;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      padding: 7px 10px;
+      margin-bottom: 8px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .search::placeholder { color: #3a3a40; }
+    .search:focus { border-color: #45454e; }
+
+    .ral-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      max-height: 160px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+    .ral-grid::-webkit-scrollbar { width: 2px; }
+    .ral-grid::-webkit-scrollbar-thumb { background: #333; }
+
+    .sw {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 3px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.1s, border-color 0.1s;
+      position: relative;
+    }
+    .sw:hover { transform: scale(1.2); z-index: 5; border-color: rgba(255,255,255,0.45); }
+    .sw.on { border-color: #fff; transform: scale(1.1); }
+
+    .sep {
+      height: 1px; background: var(--border);
+      margin: 4px 0 22px;
+    }
+
+    /* ── Mesh info ── */
+    .mesh-panel {
+      border-top: 1px solid var(--border);
+      padding: 0 18px 16px;
+      flex-shrink: 0;
+    }
+    details summary {
+      cursor: pointer;
+      padding: 12px 0 8px;
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted);
+      user-select: none;
+      list-style: none;
+    }
+    details summary::before { content: '▶ '; font-size: 8px; }
+    details[open] summary::before { content: '▼ '; }
+    .mesh-item {
+      font-size: 11px; color: var(--muted);
+      padding: 3px 0;
+      border-bottom: 1px solid #1e1e1e;
+      word-break: break-all;
+    }
+    #mesh-list { max-height: 140px; overflow-y: auto; }
+    #mesh-list::-webkit-scrollbar { width: 2px; }
+    #mesh-list::-webkit-scrollbar-thumb { background: #333; }
+
+    /* ── Loading ── */
+    #loading {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 200;
+      transition: opacity 0.4s;
+    }
+    #loading.fade { opacity: 0; pointer-events: none; }
+
+    .load-logo {
+      font-size: 22px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+    .load-logo span { color: var(--accent); }
+
+    .prog-wrap {
+      width: 180px; height: 2px;
+      background: #222; border-radius: 1px; overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%; background: var(--accent);
+      width: 0%; transition: width 0.25s;
+    }
+    .load-pct {
+      font-size: 12px; color: var(--muted);
+      margin-top: 14px; letter-spacing: 0.05em;
+    }
+
+    /* ── Bottom control bar ── */
+    #bottom-bar {
+      position: absolute;
+      bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(14,15,18,0.82);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 24px;
+      padding: 8px 18px;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    #bottom-bar label {
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+    }
+
+    #light-slider {
+      -webkit-appearance: none;
+      width: 130px; height: 3px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 2px; outline: none; cursor: pointer;
+    }
+    #light-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: 2px solid #111;
+      box-shadow: 0 0 6px rgba(212,168,71,0.5);
+    }
+    #light-slider::-moz-range-thumb {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer; border: 2px solid #111;
+    }
+
+    .bar-sep {
+      width: 1px; height: 16px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    #play-btn {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.6);
+      cursor: pointer; font-size: 11px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    #play-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    #play-btn.playing { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Hint ── */
+    #hint {
+      position: absolute;
+      top: 14px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px; color: rgba(255,255,255,0.2);
+      pointer-events: none;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    /* ── Console button in header ── */
+    #console-btn {
+      margin-left: 12px;
+      background: rgba(212,168,71,0.12);
+      border: 1px solid rgba(212,168,71,0.35);
+      color: var(--accent);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 5px 14px; border-radius: 20px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    #console-btn:hover { background: rgba(212,168,71,0.25); }
+    #console-btn.open  { background: rgba(212,168,71,0.3); border-color: var(--accent); }
+
+    /* ── Console overlay ── */
+    #console-overlay {
+      position: fixed; inset: 0;
+      background: rgba(8,9,11,0.96);
+      z-index: 300;
+      display: none; flex-direction: column;
+      backdrop-filter: blur(6px);
+    }
+    #console-overlay.open { display: flex; }
+
+    #console-header {
+      display: flex; align-items: center;
+      padding: 0 24px; height: 52px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0; gap: 14px;
+    }
+    #console-header h2 {
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent);
+    }
+    #console-header .cstat {
+      font-size: 11px; color: var(--muted);
+    }
+    #console-header .cstat b { color: var(--text); }
+    #console-close {
+      margin-left: auto;
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); font-size: 11px;
+      padding: 5px 14px; border-radius: 20px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    #console-close:hover { color: var(--text); border-color: #555; }
+
+    #console-body {
+      display: flex; flex: 1; overflow: hidden; gap: 0;
+    }
+
+    /* Left: mesh list */
+    #console-list-wrap {
+      flex: 1; display: flex; flex-direction: column;
+      border-right: 1px solid var(--border); overflow: hidden;
+    }
+    #console-search-wrap {
+      padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    #console-search {
+      width: 100%; background: #1a1b1e; border: 1px solid var(--border);
+      color: var(--text); font-size: 12px; padding: 7px 10px;
+      border-radius: 6px; outline: none;
+    }
+    #console-search:focus { border-color: #444; }
+    #console-table-wrap { flex: 1; overflow-y: auto; }
+    #console-table-wrap::-webkit-scrollbar { width: 4px; }
+    #console-table-wrap::-webkit-scrollbar-thumb { background: #333; }
+
+    .ct-row {
+      display: grid;
+      grid-template-columns: 1fr 90px 90px 100px;
+      gap: 0; align-items: center;
+      border-bottom: 1px solid #1a1b1e;
+      padding: 0 16px;
+      min-height: 34px;
+      transition: background 0.1s;
+    }
+    .ct-row:hover { background: rgba(255,255,255,0.03); }
+    .ct-row.hdr {
+      background: #111214;
+      position: sticky; top: 0; z-index: 2;
+      border-bottom: 1px solid var(--border);
+    }
+    .ct-name {
+      font-size: 11px; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      padding: 8px 0;
+    }
+    .ct-hdr { font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+              text-transform: uppercase; color: var(--muted); }
+    .ct-badge {
+      font-size: 10px; font-weight: 600;
+      padding: 2px 8px; border-radius: 10px;
+      display: inline-block; text-align: center;
+    }
+    .ct-badge.body   { background: #1a2535; color: #7af; border: 1px solid #4488cc; }
+    .ct-badge.accent { background: #1a2515; color: #af7; border: 1px solid #77aa44; }
+    .ct-badge.none   { background: #1e1e1e; color: #666; border: 1px solid #333; }
+    .ct-badge.glass  { background: #0d1e2a; color: #7df; border: 1px solid #44aacc; }
+    .ct-badge.steel  { background: #1e1e22; color: #ccc; border: 1px solid #888; }
+
+    .ct-sel {
+      background: #1a1b1e; border: 1px solid var(--border);
+      color: var(--text); font-size: 10px; padding: 3px 6px;
+      border-radius: 4px; cursor: pointer; outline: none;
+      width: 88px;
+    }
+
+    /* Right: export panel */
+    #console-export {
+      width: 300px; flex-shrink: 0;
+      display: flex; flex-direction: column;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    #console-export h3 {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 14px;
+    }
+    .exp-stat {
+      display: flex; justify-content: space-between;
+      padding: 6px 0; border-bottom: 1px solid #1e1e1e;
+      font-size: 12px;
+    }
+    .exp-stat .lbl { color: var(--muted); }
+    .exp-stat .val { font-weight: 600; color: var(--text); }
+    .exp-stat .val.hi { color: var(--accent); }
+
+    #exp-btn {
+      margin-top: 20px;
+      background: var(--accent); color: #111;
+      border: none; border-radius: 8px;
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 12px; cursor: pointer;
+      transition: opacity 0.15s;
+      width: 100%;
+    }
+    #exp-btn:hover { opacity: 0.85; }
+
+    #copy-btn {
+      margin-top: 8px;
+      background: none; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 11px; padding: 8px;
+      cursor: pointer; transition: all 0.15s; width: 100%;
+    }
+    #copy-btn:hover { color: var(--text); border-color: #555; }
+
+    #exp-note {
+      margin-top: 16px; font-size: 10px; color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── Group counters ── */
+    .grp-count {
+      display: inline-block;
+      font-size: 9px; font-weight: 600;
+      padding: 1px 7px; border-radius: 10px;
+      margin-left: 6px; vertical-align: middle;
+      background: #222; color: #555;
+    }
+    .grp-count.ready { background: #1e2a1e; color: #5a8; }
+
+    /* ── Material preset tabs ── */
+    .preset-row {
+      display: flex; gap: 3px;
+      margin: 8px 0 4px;
+    }
+    .pt {
+      flex: 1;
+      background: #1f2024;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 9px; font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 5px 2px;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .pt:hover { background: #282830; color: #bbb; }
+    .pt.on { background: #252535; border-color: #4455aa; color: #aac; }
+
+    /* ── Mesh selection popup ── */
+    #mesh-sel {
+      position: fixed;
+      left: 16px; bottom: 16px;
+      background: rgba(18,19,22,0.97);
+      border: 1px solid #35363e;
+      border-radius: 10px;
+      padding: 14px 16px 12px;
+      min-width: 230px;
+      font-size: 12px;
+      z-index: 50;
+      display: none;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    #mesh-sel.show { display: block; }
+    .ms-title {
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .ms-name {
+      font-size: 12px; font-weight: 600;
+      margin-bottom: 4px;
+      word-break: break-all;
+      color: var(--text);
+    }
+    .ms-group {
+      font-size: 11px; color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .ms-group span { color: var(--accent); }
+    .ms-btns { display: flex; gap: 5px; }
+    .ms-btn {
+      flex: 1;
+      background: #1f2024;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 10px;
+      padding: 6px 4px;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .ms-btn:hover { background: #2a2b30; color: #ddd; }
+    .ms-btn.body-on  { border-color: #4488cc; color: #7af; background: #1a2535; }
+    .ms-btn.acc-on   { border-color: #77aa44; color: #af7; background: #1a2515; }
+    .ms-btn.none-on  { border-color: #555; color: #999; background: #1f2024; }
+    .ms-close {
+      position: absolute; top: 10px; right: 12px;
+      color: var(--muted); cursor: pointer; font-size: 14px;
+      line-height: 1;
+    }
+    .ms-close:hover { color: var(--text); }
+    .ms-section-label {
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .ms-sep {
+      height: 1px; background: rgba(255,255,255,0.06);
+      margin: 10px 0 10px;
+    }
+    .ms-btn.glass-on { border-color: #44aacc; color: #7df; background: #0d1e2a; }
+    .ms-btn.steel-on { border-color: #aaaaaa; color: #ddd; background: #1e1e22; }
+    .ms-btn.std-on   { border-color: var(--accent); color: var(--accent); background: #1e1a0d; }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="load-logo">Typhoon <span>Configurator</span></div>
+  <div class="prog-wrap"><div class="prog-fill" id="prog"></div></div>
+  <div class="load-pct" id="load-txt">Загрузка модели…</div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo-mark">T</div>
+  <div class="logo-text">Typhoon <span>Roasters</span></div>
+  <div class="header-tag">Admin</div>
+  <button id="console-btn" onclick="toggleConsole()">⚙ КОНСОЛЬ</button>
+</header>
+
+<!-- Main -->
+<div class="main">
+  <div id="canvas-wrap">
+    <div id="hint">← Тяни для вращения · Клик = выбор элемента →</div>
+    <div id="bottom-bar">
+      <label>Свет</label>
+      <input type="range" id="light-slider" min="0" max="360" value="45" step="1">
+      <div class="bar-sep"></div>
+      <label>Вращение</label>
+      <button id="play-btn" class="playing" title="Стоп/Старт">▶</button>
+    </div>
+  </div>
+
+  <!-- Mesh selection popup -->
+  <div id="mesh-sel">
+    <span class="ms-close" id="ms-close">✕</span>
+    <div class="ms-title">Выбранный элемент</div>
+    <div class="ms-name" id="ms-name">—</div>
+
+    <div class="ms-section-label">Окраска</div>
+    <div class="ms-group">Группа: <span id="ms-grp">—</span></div>
+    <div class="ms-btns">
+      <div class="ms-btn" id="ms-body" onclick="reassignSelected('body')">Корпус</div>
+      <div class="ms-btn" id="ms-acc"  onclick="reassignSelected('accent')">Доп. элем.</div>
+      <div class="ms-btn" id="ms-none" onclick="reassignSelected('none')">Не красить</div>
+    </div>
+
+    <div class="ms-sep"></div>
+
+    <div class="ms-section-label">Материал</div>
+    <div class="ms-btns">
+      <div class="ms-btn" id="ms-mat-std"   onclick="setMeshMaterial('standard')">Крашеный</div>
+      <div class="ms-btn" id="ms-mat-glass" onclick="setMeshMaterial('glass')">🔲 Стекло</div>
+      <div class="ms-btn" id="ms-mat-steel" onclick="setMeshMaterial('steel')">⬜ Нержавейка</div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-scroll">
+
+      <!-- BODY COLOR -->
+      <div class="color-section">
+        <div class="section-label">
+          Основной цвет — корпус
+          <span class="grp-count" id="body-count">…</span>
+        </div>
+        <div class="selected-row">
+          <div class="sel-swatch" id="body-sw"></div>
+          <div class="sel-info">
+            <div class="ral-code" id="body-code">—</div>
+            <div class="ral-name" id="body-name">Не выбран</div>
+          </div>
+        </div>
+        <div class="preset-row" id="pt-body">
+          <div class="pt on"  data-g="body" data-p="matte">Матовый</div>
+          <div class="pt"     data-g="body" data-p="gloss">Глянец</div>
+          <div class="pt"     data-g="body" data-p="metal">Металл</div>
+          <div class="pt"     data-g="body" data-p="chrome">Хром</div>
+        </div>
+        <input class="search" id="s-body" type="text" placeholder="Поиск RAL или названия…">
+        <div class="ral-grid" id="g-body"></div>
+      </div>
+
+      <div class="sep"></div>
+
+      <!-- ACCENT COLOR -->
+      <div class="color-section">
+        <div class="section-label">
+          Дополнительные элементы
+          <span class="grp-count" id="acc-count">…</span>
+        </div>
+        <div class="selected-row">
+          <div class="sel-swatch" id="acc-sw"></div>
+          <div class="sel-info">
+            <div class="ral-code" id="acc-code">—</div>
+            <div class="ral-name" id="acc-name">Не выбран</div>
+          </div>
+        </div>
+        <div class="preset-row" id="pt-acc">
+          <div class="pt on"  data-g="acc" data-p="matte">Матовый</div>
+          <div class="pt"     data-g="acc" data-p="gloss">Глянец</div>
+          <div class="pt"     data-g="acc" data-p="metal">Металл</div>
+          <div class="pt"     data-g="acc" data-p="chrome">Хром</div>
+        </div>
+        <input class="search" id="s-acc" type="text" placeholder="Поиск RAL или названия…">
+        <div class="ral-grid" id="g-acc"></div>
+      </div>
+
+    </div>
+
+    <div class="mesh-panel">
+      <details>
+        <summary>Объекты в модели</summary>
+        <div id="mesh-list"></div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader }  from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+// ================================================================
+// Меши которые никогда не красятся (болты, винты, капсулы и т.д.)
+// ================================================================
+const SKIP_PREFIXES = ['SMALL_BOLT', 'BIG_BOLT', 'BOLT_3', '4_Instance', 'Capsule',
+                       '_RE_C6_', 'WIRE_', 'SIGNS', 'signs_', 'screen_'];
+function shouldSkip(name) {
+  return SKIP_PREFIXES.some(p => name.startsWith(p));
+}
+
+// ================================================================
+// Стеклянные меши — получают MeshPhysicalMaterial, не красятся
+// ================================================================
+const GLASS_MESHES = ['ALL1_37'];
+
+function makeGlassMaterial() {
+  return new THREE.MeshPhysicalMaterial({
+    color:           new THREE.Color(0.88, 0.96, 1.0), // слабый голубой тинт
+    transmission:    0.93,   // физическая прозрачность
+    transparent:     true,
+    opacity:         1.0,
+    roughness:       0.06,   // гладкое стекло
+    metalness:       0.0,
+    ior:             1.50,   // стандартный IOR стекла
+    thickness:       2.5,
+    attenuationColor: new THREE.Color(0.8, 0.95, 1.0),
+    attenuationDistance: 8,
+    envMapIntensity: 0.08,   // минимум — иначе выглядит как зеркало
+    side:            THREE.DoubleSide,
+    depthWrite:      false,
+  });
+}
+
+function makeSteelMaterial() {
+  return new THREE.MeshStandardMaterial({
+    color:           new THREE.Color(0.72, 0.72, 0.72), // нейтральный светло-серый
+    metalness:       0.88,
+    roughness:       0.38,   // матовая нержавейка (полировка ~320-grit)
+    envMapIntensity: 0.5,
+  });
+}
+
+// Классификация по SRGB-цвету (конвертируем из линейного пространства Three.js)
+function classifyMaterial(mat) {
+  if (!mat || !mat.color) return 'none';
+  // Конвертируем из linear → sRGB для корректной классификации
+  const srgb = mat.color.clone().convertLinearToSRGB();
+  const hsl = { h: 0, s: 0, l: 0 };
+  srgb.getHSL(hsl);
+  // Насыщенный цвет (синий корпус, жёлтый, красный и т.д.)
+  if (hsl.s > 0.18 && hsl.l > 0.05 && hsl.l < 0.90) return 'body';
+  // Светлый ненасыщенный (белые/светло-серые панели)
+  if (hsl.l > 0.55 && hsl.s < 0.18) return 'accent';
+  return 'none';
+}
+
+// ── RAL Classic palette (ru) ──
+const RAL = [
+  { n:'RAL 1000', name:'Зелёный бежевый',       hex:'#CDBA88' },
+  { n:'RAL 1001', name:'Бежевый',                hex:'#D0B084' },
+  { n:'RAL 1002', name:'Песочно-жёлтый',         hex:'#D2AA6D' },
+  { n:'RAL 1003', name:'Сигнально-жёлтый',       hex:'#F9A12E' },
+  { n:'RAL 1004', name:'Золотисто-жёлтый',       hex:'#E49E00' },
+  { n:'RAL 1005', name:'Медово-жёлтый',          hex:'#CB8F00' },
+  { n:'RAL 1011', name:'Коричнево-бежевый',      hex:'#AF804F' },
+  { n:'RAL 1012', name:'Лимонно-жёлтый',         hex:'#DFCA00' },
+  { n:'RAL 1013', name:'Жемчужно-белый',         hex:'#E9E0D2' },
+  { n:'RAL 1014', name:'Слоновая кость',         hex:'#E4D098' },
+  { n:'RAL 1015', name:'Светлая слоновая кость', hex:'#EAE0C8' },
+  { n:'RAL 1016', name:'Серно-жёлтый',           hex:'#F0E000' },
+  { n:'RAL 1017', name:'Шафраново-жёлтый',       hex:'#F5A100' },
+  { n:'RAL 1018', name:'Цинково-жёлтый',         hex:'#F5E000' },
+  { n:'RAL 1019', name:'Серо-бежевый',           hex:'#A48060' },
+  { n:'RAL 1020', name:'Оливково-жёлтый',        hex:'#A0822D' },
+  { n:'RAL 1021', name:'Рапсово-жёлтый',         hex:'#F4B800' },
+  { n:'RAL 1023', name:'Транспортный жёлтый',    hex:'#F7B500' },
+  { n:'RAL 1024', name:'Охра',                   hex:'#BA8F4C' },
+  { n:'RAL 1027', name:'Карри',                  hex:'#A87C00' },
+  { n:'RAL 1028', name:'Дынно-жёлтый',           hex:'#FF9B00' },
+  { n:'RAL 1032', name:'Жёлтый ракитник',        hex:'#E2A400' },
+  { n:'RAL 1033', name:'Жёлтая георгина',        hex:'#F79B00' },
+  { n:'RAL 1034', name:'Пастельно-жёлтый',       hex:'#EB9C52' },
+  { n:'RAL 2000', name:'Жёлто-оранжевый',        hex:'#DA6600' },
+  { n:'RAL 2001', name:'Красно-оранжевый',       hex:'#BA481B' },
+  { n:'RAL 2002', name:'Киноварь',               hex:'#BE3A34' },
+  { n:'RAL 2003', name:'Пастельно-оранжевый',    hex:'#F47036' },
+  { n:'RAL 2004', name:'Чистый оранжевый',       hex:'#E05B00' },
+  { n:'RAL 2008', name:'Ярко-красно-оранжевый',  hex:'#F16D31' },
+  { n:'RAL 2009', name:'Транспортный оранжевый', hex:'#DE5B12' },
+  { n:'RAL 2010', name:'Сигнально-оранжевый',    hex:'#D4652F' },
+  { n:'RAL 2011', name:'Глубокий оранжевый',     hex:'#EC7C25' },
+  { n:'RAL 2012', name:'Лососево-оранжевый',     hex:'#DC6444' },
+  { n:'RAL 3000', name:'Огненно-красный',        hex:'#AB2524' },
+  { n:'RAL 3001', name:'Сигнально-красный',      hex:'#A02128' },
+  { n:'RAL 3002', name:'Карминно-красный',       hex:'#A1232B' },
+  { n:'RAL 3003', name:'Рубиново-красный',       hex:'#8D1D2C' },
+  { n:'RAL 3004', name:'Пурпурно-красный',       hex:'#701F29' },
+  { n:'RAL 3005', name:'Винно-красный',          hex:'#5E2028' },
+  { n:'RAL 3007', name:'Чёрно-красный',          hex:'#3F1E24' },
+  { n:'RAL 3009', name:'Оксидно-красный',        hex:'#712122' },
+  { n:'RAL 3011', name:'Коричнево-красный',      hex:'#7E292C' },
+  { n:'RAL 3012', name:'Бежево-красный',         hex:'#CB8276' },
+  { n:'RAL 3013', name:'Томатно-красный',        hex:'#9C322E' },
+  { n:'RAL 3014', name:'Антично-розовый',        hex:'#D47479' },
+  { n:'RAL 3015', name:'Светло-розовый',         hex:'#E1A6AD' },
+  { n:'RAL 3016', name:'Коралловый',             hex:'#AC4034' },
+  { n:'RAL 3017', name:'Розовый',                hex:'#D3545F' },
+  { n:'RAL 3018', name:'Клубнично-красный',      hex:'#D14152' },
+  { n:'RAL 3020', name:'Транспортный красный',   hex:'#CC0605' },
+  { n:'RAL 3022', name:'Лососево-розовый',       hex:'#D56D56' },
+  { n:'RAL 3027', name:'Малиново-красный',       hex:'#B42041' },
+  { n:'RAL 3031', name:'Ориентально-красный',    hex:'#B32428' },
+  { n:'RAL 4001', name:'Красно-сиреневый',       hex:'#8D668A' },
+  { n:'RAL 4002', name:'Красно-фиолетовый',      hex:'#922B3E' },
+  { n:'RAL 4003', name:'Вересково-фиолетовый',   hex:'#DE4C8A' },
+  { n:'RAL 4004', name:'Бордово-фиолетовый',     hex:'#641C34' },
+  { n:'RAL 4005', name:'Голубовато-сиреневый',   hex:'#6C6695' },
+  { n:'RAL 4006', name:'Транспортный пурпурный', hex:'#A03472' },
+  { n:'RAL 4007', name:'Пурпурно-фиолетовый',   hex:'#4A192C' },
+  { n:'RAL 4008', name:'Сигнально-фиолетовый',   hex:'#924E7D' },
+  { n:'RAL 4009', name:'Пастельно-фиолетовый',   hex:'#A18594' },
+  { n:'RAL 4010', name:'Телемагента',            hex:'#CF3476' },
+  { n:'RAL 5000', name:'Фиолетово-синий',        hex:'#384C70' },
+  { n:'RAL 5001', name:'Сине-зелёный',           hex:'#1F4764' },
+  { n:'RAL 5002', name:'Ультрамариново-синий',   hex:'#20214F' },
+  { n:'RAL 5003', name:'Сапфирово-синий',        hex:'#1D334A' },
+  { n:'RAL 5005', name:'Сигнально-синий',        hex:'#1A5784' },
+  { n:'RAL 5007', name:'Бриллиантово-синий',     hex:'#3E5F8A' },
+  { n:'RAL 5009', name:'Лазурно-синий',          hex:'#025669' },
+  { n:'RAL 5010', name:'Горечавково-синий',      hex:'#0E4C8A' },
+  { n:'RAL 5011', name:'Стально-синий',          hex:'#1B2A4A' },
+  { n:'RAL 5012', name:'Светло-синий',           hex:'#3B83BD' },
+  { n:'RAL 5013', name:'Кобальтово-синий',       hex:'#1E213D' },
+  { n:'RAL 5014', name:'Голубино-синий',         hex:'#6C8198' },
+  { n:'RAL 5015', name:'Небесно-синий',          hex:'#2071B5' },
+  { n:'RAL 5017', name:'Транспортный синий',     hex:'#0E518D' },
+  { n:'RAL 5018', name:'Бирюзово-синий',         hex:'#2A6478' },
+  { n:'RAL 5019', name:'Капри-синий',            hex:'#1B5583' },
+  { n:'RAL 5021', name:'Водяной синий',          hex:'#07737A' },
+  { n:'RAL 5022', name:'Ночной синий',           hex:'#2A2168' },
+  { n:'RAL 5023', name:'Отдалённо-синий',        hex:'#4D668E' },
+  { n:'RAL 5024', name:'Пастельно-синий',        hex:'#6A93B0' },
+  { n:'RAL 6000', name:'Патиново-зелёный',       hex:'#3E7460' },
+  { n:'RAL 6001', name:'Изумрудно-зелёный',      hex:'#2D6E4E' },
+  { n:'RAL 6003', name:'Оливково-зелёный',       hex:'#4B5928' },
+  { n:'RAL 6005', name:'Мохово-зелёный',         hex:'#0F4336' },
+  { n:'RAL 6007', name:'Бутылочно-зелёный',      hex:'#2B3A2C' },
+  { n:'RAL 6009', name:'Пихтово-зелёный',        hex:'#27352A' },
+  { n:'RAL 6010', name:'Травяно-зелёный',        hex:'#4D6F39' },
+  { n:'RAL 6011', name:'Резедово-зелёный',       hex:'#70785E' },
+  { n:'RAL 6013', name:'Тростниково-зелёный',    hex:'#7C7B4D' },
+  { n:'RAL 6016', name:'Бирюзово-зелёный',       hex:'#1F784C' },
+  { n:'RAL 6017', name:'Майско-зелёный',         hex:'#4B8B4A' },
+  { n:'RAL 6018', name:'Жёлто-зелёный',          hex:'#5B8930' },
+  { n:'RAL 6019', name:'Пастельно-зелёный',      hex:'#C7D9B4' },
+  { n:'RAL 6024', name:'Транспортный зелёный',   hex:'#308B6C' },
+  { n:'RAL 6025', name:'Папоротниково-зелёный',  hex:'#5C7A4B' },
+  { n:'RAL 6029', name:'Мятно-зелёный',          hex:'#2D8B57' },
+  { n:'RAL 6032', name:'Сигнально-зелёный',      hex:'#28895C' },
+  { n:'RAL 6034', name:'Пастельно-бирюзовый',    hex:'#88C4C0' },
+  { n:'RAL 7000', name:'Беличий серый',          hex:'#7B8C96' },
+  { n:'RAL 7001', name:'Серебристо-серый',        hex:'#8D9BA8' },
+  { n:'RAL 7002', name:'Оливково-серый',         hex:'#8B8775' },
+  { n:'RAL 7003', name:'Моховой серый',          hex:'#808070' },
+  { n:'RAL 7004', name:'Сигнально-серый',        hex:'#969EA0' },
+  { n:'RAL 7005', name:'Мышиный серый',          hex:'#6C7477' },
+  { n:'RAL 7006', name:'Бежево-серый',           hex:'#756E60' },
+  { n:'RAL 7008', name:'Хаки-серый',             hex:'#6B6245' },
+  { n:'RAL 7011', name:'Железно-серый',          hex:'#52616A' },
+  { n:'RAL 7012', name:'Базальтово-серый',       hex:'#596165' },
+  { n:'RAL 7015', name:'Сланцево-серый',         hex:'#5B6166' },
+  { n:'RAL 7016', name:'Антрацитово-серый',      hex:'#383E42' },
+  { n:'RAL 7021', name:'Чёрно-серый',            hex:'#303638' },
+  { n:'RAL 7022', name:'Умбра серый',            hex:'#3E3C3C' },
+  { n:'RAL 7023', name:'Бетонно-серый',          hex:'#7B7C7C' },
+  { n:'RAL 7024', name:'Графитовый серый',       hex:'#474A50' },
+  { n:'RAL 7026', name:'Гранитный серый',        hex:'#3A4045' },
+  { n:'RAL 7030', name:'Каменный серый',         hex:'#938E85' },
+  { n:'RAL 7031', name:'Сине-серый',             hex:'#5B6E7C' },
+  { n:'RAL 7032', name:'Галечный серый',         hex:'#B5B0A0' },
+  { n:'RAL 7033', name:'Цементно-серый',         hex:'#818A79' },
+  { n:'RAL 7035', name:'Светло-серый',           hex:'#CBD0CC' },
+  { n:'RAL 7036', name:'Платиново-серый',        hex:'#9A9697' },
+  { n:'RAL 7037', name:'Пыльно-серый',           hex:'#7C7F7E' },
+  { n:'RAL 7038', name:'Агатово-серый',          hex:'#B4B8B0' },
+  { n:'RAL 7039', name:'Кварцево-серый',         hex:'#6A6A68' },
+  { n:'RAL 7040', name:'Оконный серый',          hex:'#9BA0A6' },
+  { n:'RAL 7042', name:'Транспортный серый A',   hex:'#8F9695' },
+  { n:'RAL 7043', name:'Транспортный серый B',   hex:'#4E5451' },
+  { n:'RAL 7044', name:'Шёлково-серый',          hex:'#BEC1B3' },
+  { n:'RAL 7045', name:'Телегрей 1',             hex:'#8C9295' },
+  { n:'RAL 7046', name:'Телегрей 2',             hex:'#7D848C' },
+  { n:'RAL 7047', name:'Телегрей 4',             hex:'#C5C7C4' },
+  { n:'RAL 8000', name:'Зелёно-коричневый',      hex:'#826C34' },
+  { n:'RAL 8001', name:'Охристо-коричневый',     hex:'#955F20' },
+  { n:'RAL 8002', name:'Сигнально-коричневый',   hex:'#6C3B2A' },
+  { n:'RAL 8003', name:'Глинисто-коричневый',    hex:'#734222' },
+  { n:'RAL 8004', name:'Медно-коричневый',       hex:'#8E402A' },
+  { n:'RAL 8007', name:'Оленево-коричневый',     hex:'#6F4A2F' },
+  { n:'RAL 8008', name:'Оливково-коричневый',    hex:'#6F4F28' },
+  { n:'RAL 8011', name:'Ореховый коричневый',    hex:'#4F3024' },
+  { n:'RAL 8012', name:'Красно-коричневый',      hex:'#4C2F27' },
+  { n:'RAL 8014', name:'Сепия',                  hex:'#382616' },
+  { n:'RAL 8015', name:'Каштановый',             hex:'#5C2E2C' },
+  { n:'RAL 8016', name:'Красное дерево',         hex:'#4C2224' },
+  { n:'RAL 8017', name:'Шоколадно-коричневый',   hex:'#44292C' },
+  { n:'RAL 8019', name:'Серо-коричневый',        hex:'#3D3632' },
+  { n:'RAL 8022', name:'Чёрно-коричневый',       hex:'#211E1D' },
+  { n:'RAL 8023', name:'Оранжево-коричневый',    hex:'#7B4022' },
+  { n:'RAL 8024', name:'Бежево-коричневый',      hex:'#7B5141' },
+  { n:'RAL 8025', name:'Бледно-коричневый',      hex:'#7B6045' },
+  { n:'RAL 8028', name:'Терракотово-коричневый', hex:'#4F3829' },
+  { n:'RAL 9001', name:'Кремовый',               hex:'#FDF4E3' },
+  { n:'RAL 9002', name:'Серовато-белый',         hex:'#E7EBDA' },
+  { n:'RAL 9003', name:'Сигнально-белый',        hex:'#F4F4F4' },
+  { n:'RAL 9004', name:'Сигнально-чёрный',       hex:'#2B2B2C' },
+  { n:'RAL 9005', name:'Чёрный',                 hex:'#0A0A0A' },
+  { n:'RAL 9006', name:'Белый алюминий',         hex:'#A5A5A5' },
+  { n:'RAL 9007', name:'Серый алюминий',         hex:'#8F8F8F' },
+  { n:'RAL 9010', name:'Чистый белый',           hex:'#FFFFFF' },
+  { n:'RAL 9011', name:'Графитово-чёрный',       hex:'#272727' },
+  { n:'RAL 9016', name:'Транспортный белый',     hex:'#F6F6F6' },
+  { n:'RAL 9017', name:'Транспортный чёрный',    hex:'#1C1C1C' },
+  { n:'RAL 9018', name:'Папирусно-белый',        hex:'#D7D7D0' },
+];
+
+// ── Three.js setup ──
+const wrap = document.getElementById('canvas-wrap');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.35;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// Нужно для физической прозрачности (MeshPhysicalMaterial transmission)
+renderer.capabilities.isWebGL2 = true;
+wrap.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+
+// Gradient background texture
+const bgCv = document.createElement('canvas');
+bgCv.width = 2; bgCv.height = 512;
+const bgCtx = bgCv.getContext('2d');
+const grd = bgCtx.createLinearGradient(0, 0, 0, 512);
+grd.addColorStop(0, '#1c1e22');
+grd.addColorStop(1, '#0b0c0e');
+bgCtx.fillStyle = grd;
+bgCtx.fillRect(0, 0, 2, 512);
+scene.background = new THREE.CanvasTexture(bgCv);
+
+const camera = new THREE.PerspectiveCamera(38, wrap.clientWidth / wrap.clientHeight, 0.01, 500);
+
+// ── Lights (all in lightRig so slider can rotate them) ──
+scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+
+const lightRig = new THREE.Group();
+scene.add(lightRig);
+
+const key = new THREE.DirectionalLight(0xfff8ee, 2.2);
+key.position.set(4, 6, 5);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.near = 0.5;
+key.shadow.camera.far = 60;
+key.shadow.bias = -0.001;
+lightRig.add(key);
+
+const fill = new THREE.DirectionalLight(0xd6e8ff, 0.7);
+fill.position.set(-5, 3, -3);
+lightRig.add(fill);
+
+const rim = new THREE.DirectionalLight(0xffffff, 0.4);
+rim.position.set(0, -3, -6);
+lightRig.add(rim);
+
+// Light slider
+document.getElementById('light-slider').addEventListener('input', e => {
+  lightRig.rotation.y = THREE.MathUtils.degToRad(Number(e.target.value));
+});
+
+// Ground shadow plane
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(30, 30),
+  new THREE.ShadowMaterial({ opacity: 0.3 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Subtle ground grid (visual)
+const gridHelper = new THREE.GridHelper(14, 28, 0x2a2a30, 0x222226);
+scene.add(gridHelper);
+
+// Model pivot group (rotates around Y)
+const pivot = new THREE.Group();
+scene.add(pivot);
+
+// ── Drag + click (Y axis only, no zoom) ──
+let dragging = false, lastX = 0, dragMoved = false;
+let autoSpin = true;
+let spinTimer = null;
+
+const cvs = renderer.domElement;
+
+// Play / Stop button
+const playBtn = document.getElementById('play-btn');
+playBtn.addEventListener('click', () => {
+  autoSpin = !autoSpin;
+  clearTimeout(spinTimer);
+  playBtn.textContent = autoSpin ? '▶' : '⏸';
+  playBtn.className = 'playing' + (autoSpin ? ' playing' : '');
+});
+// init icon
+playBtn.textContent = '⏸';
+
+cvs.addEventListener('mousedown', e => {
+  if (e.target !== cvs) return;
+  dragging = true; lastX = e.clientX; dragMoved = false;
+  autoSpin = false; clearTimeout(spinTimer);
+  playBtn.textContent = '▶'; playBtn.className = '';
+});
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX;
+  if (Math.abs(dx) > 3) dragMoved = true;
+  pivot.rotation.y += dx * 0.008;
+  lastX = e.clientX;
+});
+window.addEventListener('mouseup', e => {
+  if (!dragging) return;
+  if (!dragMoved) handleClick(e);
+  dragging = false;
+});
+
+cvs.addEventListener('touchstart', e => {
+  dragging = true; lastX = e.touches[0].clientX; dragMoved = false;
+  autoSpin = false; clearTimeout(spinTimer);
+  playBtn.textContent = '▶'; playBtn.className = '';
+}, { passive: true });
+window.addEventListener('touchmove', e => {
+  if (!dragging) return;
+  const dx = e.touches[0].clientX - lastX;
+  if (Math.abs(dx) > 3) dragMoved = true;
+  pivot.rotation.y += dx * 0.008;
+  lastX = e.touches[0].clientX;
+}, { passive: true });
+window.addEventListener('touchend', () => { dragging = false; });
+
+window.addEventListener('resize', () => {
+  camera.aspect = wrap.clientWidth / wrap.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+});
+
+// ── Material registry & groups ──
+// mat.uuid → { mat, meshObj, group, matType:'standard'|'glass'|'steel' }
+const matRegistry = new Map();
+// mesh.uuid → original cloned material (for restoring from glass/steel → paint)
+const meshOrigMat = new Map();
+// meshName → { group, matType, meshObj }  — for console & export
+const meshConfig  = window._meshConfig;
+const bodyMats    = [];
+const accentMats  = [];
+
+// Active color settings per group
+const groupState = {
+  body:   { hex: null, roughness: 0.55, metalness: 0.0 },
+  accent: { hex: null, roughness: 0.55, metalness: 0.0 },
+};
+window._groupState = groupState;
+
+function applyGroupSettings(group) {
+  const s   = groupState[group];
+  const mats = group === 'body' ? bodyMats : accentMats;
+  const col  = s.hex ? new THREE.Color().setStyle(s.hex) : null;
+  mats.forEach(m => {
+    if (col && m.color !== undefined) m.color.set(col);
+    m.roughness  = s.roughness;
+    m.metalness  = s.metalness;
+    m.needsUpdate = true;
+  });
+}
+
+const PRESETS = {
+  matte:  { roughness: 0.55, metalness: 0.0 },
+  gloss:  { roughness: 0.08, metalness: 0.0 },
+  metal:  { roughness: 0.45, metalness: 0.85 },
+  chrome: { roughness: 0.04, metalness: 1.0  },
+};
+
+// ── Raycaster + mesh highlight ──
+const raycaster = new THREE.Raycaster();
+let selectedMesh = null;
+
+// Store original emissive to restore after de-selection
+const origEmissive = new Map(); // mesh.uuid → [{r,g,b,i}, ...]
+
+function setMeshHighlight(mesh, on) {
+  if (!mesh) return;
+  const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  if (on) {
+    const saved = mats.map(m => m.emissive
+      ? { r: m.emissive.r, g: m.emissive.g, b: m.emissive.b, i: m.emissiveIntensity || 0 }
+      : null);
+    origEmissive.set(mesh.uuid, saved);
+    mats.forEach(m => {
+      if (!m.emissive) return;
+      m.emissive.setRGB(0.35, 0.28, 0.05); // warm yellow glow
+      m.emissiveIntensity = 1.2;
+      m.needsUpdate = true;
+    });
+  } else {
+    const saved = origEmissive.get(mesh.uuid);
+    if (saved) {
+      mats.forEach((m, i) => {
+        if (!m.emissive || !saved[i]) return;
+        m.emissive.setRGB(saved[i].r, saved[i].g, saved[i].b);
+        m.emissiveIntensity = saved[i].i;
+        m.needsUpdate = true;
+      });
+      origEmissive.delete(mesh.uuid);
+    }
+  }
+}
+
+function handleClick(e) {
+  const rect = cvs.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) / rect.width)  *  2 - 1;
+  const y = ((e.clientY - rect.top)  / rect.height) * -2 + 1;
+  raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+  const hits = raycaster.intersectObjects(pivot.children, true);
+
+  // De-select previous
+  if (selectedMesh) setMeshHighlight(selectedMesh, false);
+
+  if (hits.length === 0) {
+    selectedMesh = null;
+    hideMeshPanel();
+    return;
+  }
+  selectedMesh = hits[0].object;
+  setMeshHighlight(selectedMesh, true);
+  showMeshPanel(selectedMesh);
+}
+
+const GROUP_LABELS = { body: 'Корпус', accent: 'Доп. элементы', none: 'Не красить' };
+
+function showMeshPanel(mesh) {
+  const panel = document.getElementById('mesh-sel');
+  document.getElementById('ms-name').textContent = mesh.name || '(без имени)';
+  const mats  = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  const entry = matRegistry.get(mats[0]?.uuid);
+  const grp   = entry ? entry.group : 'none';
+  const mtype = entry ? (entry.matType || 'standard') : 'standard';
+
+  document.getElementById('ms-grp').textContent = GROUP_LABELS[grp] || grp;
+
+  // Кнопки группы окраски
+  ['body','acc','none'].forEach(id => {
+    const btn = document.getElementById('ms-' + id);
+    const g   = id === 'acc' ? 'accent' : id;
+    btn.className = 'ms-btn' + (g === grp ? ` ${id}-on` : '');
+  });
+
+  // Кнопки материала
+  document.getElementById('ms-mat-std').className   = 'ms-btn' + (mtype === 'standard' ? ' std-on'   : '');
+  document.getElementById('ms-mat-glass').className = 'ms-btn' + (mtype === 'glass'    ? ' glass-on' : '');
+  document.getElementById('ms-mat-steel').className = 'ms-btn' + (mtype === 'steel'    ? ' steel-on' : '');
+
+  panel.classList.add('show');
+}
+
+function hideMeshPanel() {
+  if (selectedMesh) { setMeshHighlight(selectedMesh, false); selectedMesh = null; }
+  document.getElementById('mesh-sel').classList.remove('show');
+}
+
+window.reassignSelected = function(newGroup) {
+  if (!selectedMesh) return;
+  const mats = Array.isArray(selectedMesh.material)
+    ? selectedMesh.material : [selectedMesh.material];
+
+  mats.forEach(m => {
+    const entry = matRegistry.get(m.uuid);
+    if (!entry) return;
+    const old = entry.group;
+
+    if (old === 'body')   { const i = bodyMats.indexOf(m);   if (i > -1) bodyMats.splice(i, 1); }
+    if (old === 'accent') { const i = accentMats.indexOf(m); if (i > -1) accentMats.splice(i, 1); }
+
+    entry.group = newGroup;
+    if (newGroup === 'body')   bodyMats.push(m);
+    if (newGroup === 'accent') accentMats.push(m);
+
+    // Immediately apply current group color + material settings
+    if (newGroup !== 'none') {
+      const s = groupState[newGroup];
+      if (s.hex && m.color !== undefined) {
+        m.color.set(new THREE.Color().setStyle(s.hex));
+      }
+      m.roughness  = s.roughness;
+      m.metalness  = s.metalness;
+    } else {
+      // "Не красить" — restore original emissive stored color is already set,
+      // just reset roughness/metalness to a neutral value
+      m.roughness = 0.5; m.metalness = 0.0;
+    }
+    m.needsUpdate = true;
+  });
+
+  // Sync meshConfig
+  const mc = meshConfig.get(selectedMesh.name);
+  if (mc) { mc.group = newGroup; mc.matType = 'standard'; }
+
+  // Re-apply highlight with updated group info visible
+  setMeshHighlight(selectedMesh, false);
+  setMeshHighlight(selectedMesh, true);
+
+  updateCounters();
+  showMeshPanel(selectedMesh);
+};
+
+document.getElementById('ms-close').addEventListener('click', hideMeshPanel);
+
+// ── Set special material (glass / steel / restore standard) ──
+window.setMeshMaterial = function(type) {
+  if (!selectedMesh) return;
+
+  const curMats = Array.isArray(selectedMesh.material)
+    ? selectedMesh.material : [selectedMesh.material];
+  const curEntry = matRegistry.get(curMats[0]?.uuid);
+  const curType  = curEntry?.matType || 'standard';
+
+  if (type === curType) return; // уже такой материал
+
+  // Убираем из групп окраски
+  curMats.forEach(m => {
+    const e = matRegistry.get(m.uuid);
+    if (!e) return;
+    if (e.group === 'body')   { const i = bodyMats.indexOf(m);   if (i>-1) bodyMats.splice(i,1); }
+    if (e.group === 'accent') { const i = accentMats.indexOf(m); if (i>-1) accentMats.splice(i,1); }
+  });
+
+  if (type === 'glass') {
+    const gm = makeGlassMaterial();
+    selectedMesh.material = gm;
+    selectedMesh.castShadow = false;
+    matRegistry.set(gm.uuid, { mat: gm, meshObj: selectedMesh, group: 'none', matType: 'glass' });
+
+  } else if (type === 'steel') {
+    const sm = makeSteelMaterial();
+    selectedMesh.material = sm;
+    selectedMesh.castShadow = true;
+    matRegistry.set(sm.uuid, { mat: sm, meshObj: selectedMesh, group: 'none', matType: 'steel' });
+
+  } else {
+    // Восстановить оригинальный материал → можно красить
+    const orig = meshOrigMat.get(selectedMesh.uuid);
+    if (orig) {
+      selectedMesh.material = orig;
+      selectedMesh.castShadow = true;
+      const origMats = Array.isArray(orig) ? orig : [orig];
+      origMats.forEach(m => {
+        const group = classifyMaterial(m);
+        matRegistry.set(m.uuid, { mat: m, meshObj: selectedMesh, group, matType: 'standard' });
+        if (group === 'body')   bodyMats.push(m);
+        if (group === 'accent') accentMats.push(m);
+      });
+    }
+  }
+
+  // Sync meshConfig
+  const mc2 = meshConfig.get(selectedMesh.name);
+  if (mc2) {
+    mc2.matType = type;
+    if (type !== 'standard') mc2.group = 'none';
+    else {
+      // re-detect group from restored material
+      const origM = meshOrigMat.get(selectedMesh.uuid);
+      if (origM) {
+        const mArr = Array.isArray(origM) ? origM : [origM];
+        mc2.group = classifyMaterial(mArr[0]) || 'none';
+      }
+    }
+  }
+
+  // Снять и заново поставить highlight
+  setMeshHighlight(selectedMesh, false);
+  setMeshHighlight(selectedMesh, true);
+
+  updateCounters();
+  showMeshPanel(selectedMesh);
+};
+
+function updateCounters() {
+  const bc = document.getElementById('body-count');
+  const ac = document.getElementById('acc-count');
+  bc.textContent = bodyMats.length;
+  bc.className = 'grp-count' + (bodyMats.length > 0 ? ' ready' : '');
+  ac.textContent = accentMats.length;
+  ac.className = 'grp-count' + (accentMats.length > 0 ? ' ready' : '');
+}
+
+// ── Load GLB ──
+const draco = new DRACOLoader();
+draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/libs/draco/');
+const loader = new GLTFLoader();
+loader.setDRACOLoader(draco);
+
+loader.load('1.glb',
+  gltf => {
+    const model = gltf.scene;
+    pivot.add(model);
+
+    const names = new Set();
+
+    model.traverse(obj => {
+      if (!obj.isMesh) return;
+      obj.castShadow = true;
+      obj.receiveShadow = true;
+      names.add(obj.name);
+
+      const skip = shouldSkip(obj.name);
+      const raw    = Array.isArray(obj.material) ? obj.material : [obj.material];
+      const cloned = raw.map(m => m.clone());
+      obj.material = cloned.length === 1 ? cloned[0] : cloned;
+
+      // Сохраняем оригинал для возможного восстановления из стекло/сталь → краска
+      meshOrigMat.set(obj.uuid, obj.material);
+
+      // ── Предустановленные стеклянные меши ──
+      if (GLASS_MESHES.includes(obj.name)) {
+        const gm = makeGlassMaterial();
+        obj.material = gm;
+        obj.castShadow = false;
+        matRegistry.set(gm.uuid, { mat: gm, meshObj: obj, group: 'none', matType: 'glass' });
+        meshConfig.set(obj.name, { group: 'none', matType: 'glass', meshObj: obj });
+        return;
+      }
+
+      cloned.forEach(m => {
+        const group = skip ? 'none' : classifyMaterial(m);
+        matRegistry.set(m.uuid, { mat: m, meshObj: obj, group, matType: 'standard' });
+        if (group === 'body')   bodyMats.push(m);
+        if (group === 'accent') accentMats.push(m);
+      });
+      // Record in meshConfig (use first material's group for multi-mat meshes)
+      const firstGroup = (cloned[0] && matRegistry.get(cloned[0].uuid)?.group) || 'none';
+      meshConfig.set(obj.name, { group: firstGroup, matType: 'standard', meshObj: obj });
+    });
+
+    updateCounters();
+    console.log(`Корпус: ${bodyMats.length} мат. | Доп.: ${accentMats.length} мат.`);
+
+    // Show mesh names
+    const ml = document.getElementById('mesh-list');
+    names.forEach(n => {
+      const d = document.createElement('div');
+      d.className = 'mesh-item';
+      d.textContent = n || '(без имени)';
+      ml.appendChild(d);
+    });
+
+    // Fit camera
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    const size   = box.getSize(new THREE.Vector3());
+    const maxD   = Math.max(size.x, size.y, size.z);
+    model.position.sub(center);
+    model.position.y += size.y * 0.5;
+    ground.position.y     = 0;
+    gridHelper.position.y = 0.01;
+    camera.position.set(0, maxD * 0.25, maxD * 1.9);
+    camera.lookAt(0, maxD * 0.15, 0);
+
+    const ld = document.getElementById('loading');
+    ld.classList.add('fade');
+    setTimeout(() => ld.style.display = 'none', 450);
+  },
+  xhr => {
+    if (!xhr.total) return;
+    const p = Math.round(xhr.loaded / xhr.total * 100);
+    document.getElementById('prog').style.width = p + '%';
+    document.getElementById('load-txt').textContent = `Загрузка… ${p}%`;
+  },
+  err => {
+    document.getElementById('load-txt').textContent = '⚠ Ошибка: ' + err.message;
+    console.error(err);
+  }
+);
+
+// ── Render loop ──
+(function loop() {
+  requestAnimationFrame(loop);
+  if (autoSpin) pivot.rotation.y += 0.0025;
+  renderer.render(scene, camera);
+})();
+
+// ── Material preset buttons ──
+document.querySelectorAll('.pt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const g = btn.dataset.g === 'body' ? 'body' : 'accent';
+    const p = btn.dataset.p;
+    const pr = PRESETS[p];
+    groupState[g].roughness = pr.roughness;
+    groupState[g].metalness = pr.metalness;
+    applyGroupSettings(g);
+    // Update active state in this row
+    document.querySelectorAll(`[data-g="${btn.dataset.g}"]`).forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+  });
+});
+
+// ── RAL Color pickers ──
+function buildPicker({ gridId, searchId, swatchId, codeId, nameId, group }) {
+  const grid   = document.getElementById(gridId);
+  const search = document.getElementById(searchId);
+  const sw     = document.getElementById(swatchId);
+  const code   = document.getElementById(codeId);
+  const nm     = document.getElementById(nameId);
+  let active   = null;
+
+  function render(q = '') {
+    grid.innerHTML = '';
+    const f = q.toLowerCase();
+    RAL.filter(r => !f || r.n.toLowerCase().includes(f) || r.name.toLowerCase().includes(f))
+      .forEach(r => {
+        const el = document.createElement('div');
+        el.className = 'sw' + (active === r.n ? ' on' : '');
+        el.style.background = r.hex;
+        el.title = `${r.n} — ${r.name}`;
+        el.addEventListener('click', () => {
+          active = r.n;
+          sw.style.background = r.hex;
+          code.textContent = r.n;
+          nm.textContent   = r.name;
+          groupState[group].hex = r.hex;
+          applyGroupSettings(group);
+          render(search.value);
+        });
+        grid.appendChild(el);
+      });
+  }
+
+  search.addEventListener('input', () => render(search.value));
+  render();
+}
+
+buildPicker({ gridId:'g-body', searchId:'s-body', swatchId:'body-sw',
+              codeId:'body-code', nameId:'body-name', group:'body' });
+buildPicker({ gridId:'g-acc',  searchId:'s-acc',  swatchId:'acc-sw',
+              codeId:'acc-code', nameId:'acc-name', group:'accent' });
+</script>
+
+<!-- ══════════════════ CONSOLE OVERLAY ══════════════════ -->
+<div id="console-overlay">
+  <div id="console-header">
+    <h2>⚙ Консоль конфигуратора</h2>
+    <span class="cstat">Корпус: <b id="cs-body">—</b></span>
+    <span class="cstat">Доп.: <b id="cs-acc">—</b></span>
+    <span class="cstat">Стекло: <b id="cs-glass">—</b></span>
+    <span class="cstat">Нержавейка: <b id="cs-steel">—</b></span>
+    <span class="cstat">Не красить: <b id="cs-none">—</b></span>
+    <button id="console-close" onclick="toggleConsole()">✕ Закрыть</button>
+  </div>
+
+  <div id="console-body">
+    <!-- Mesh list -->
+    <div id="console-list-wrap">
+      <div id="console-search-wrap">
+        <input id="console-search" type="text" placeholder="Фильтр по имени меша…" oninput="renderConsoleTable(this.value)">
+      </div>
+      <div id="console-table-wrap">
+        <div class="ct-row hdr">
+          <span class="ct-name ct-hdr">Меш</span>
+          <span class="ct-hdr">Группа</span>
+          <span class="ct-hdr">Материал</span>
+          <span class="ct-hdr">Изменить</span>
+        </div>
+        <div id="console-rows"></div>
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div id="console-export">
+      <h3>Экспорт конфига</h3>
+      <div class="exp-stat"><span class="lbl">Корпус (меши)</span>     <span class="val hi" id="es-body">—</span></div>
+      <div class="exp-stat"><span class="lbl">Доп. элементы (меши)</span><span class="val hi" id="es-acc">—</span></div>
+      <div class="exp-stat"><span class="lbl">Стекло</span>             <span class="val"     id="es-glass">—</span></div>
+      <div class="exp-stat"><span class="lbl">Нержавейка</span>         <span class="val"     id="es-steel">—</span></div>
+      <div class="exp-stat"><span class="lbl">Не красить</span>         <span class="val"     id="es-none">—</span></div>
+      <div class="exp-stat"><span class="lbl">Цвет корпуса</span>       <span class="val"     id="es-bodyhex">—</span></div>
+      <div class="exp-stat"><span class="lbl">Цвет доп.</span>          <span class="val"     id="es-acchex">—</span></div>
+
+      <button id="exp-btn" onclick="downloadConfig()">⬇ Скачать config.json</button>
+      <button id="copy-btn" onclick="copyConfig()">⎘ Скопировать JSON</button>
+
+      <p id="exp-note">
+        Сохрани <b>config.json</b> рядом с <b>configurator-user.html</b>.
+        Пользовательская версия автоматически загрузит его при открытии.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── meshConfig: имя_меша → { group, matType } (обновляется из основного модуля) ──
+// Объявляем здесь чтобы быть доступным глобально
+window._meshConfig = new Map();
+
+function toggleConsole() {
+  const ov  = document.getElementById('console-overlay');
+  const btn = document.getElementById('console-btn');
+  const isOpen = ov.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  if (isOpen) {
+    refreshConsole();
+    document.getElementById('console-search').value = '';
+    renderConsoleTable('');
+  }
+}
+
+function refreshConsole() {
+  const mc = window._meshConfig;
+  let body=0, acc=0, glass=0, steel=0, none=0;
+  mc.forEach(v => {
+    if (v.matType==='glass')        glass++;
+    else if (v.matType==='steel')   steel++;
+    else if (v.group==='body')      body++;
+    else if (v.group==='accent')    acc++;
+    else                            none++;
+  });
+  // Header stats
+  document.getElementById('cs-body').textContent  = body;
+  document.getElementById('cs-acc').textContent   = acc;
+  document.getElementById('cs-glass').textContent = glass;
+  document.getElementById('cs-steel').textContent = steel;
+  document.getElementById('cs-none').textContent  = none;
+  // Export stats
+  document.getElementById('es-body').textContent  = body;
+  document.getElementById('es-acc').textContent   = acc;
+  document.getElementById('es-glass').textContent = glass;
+  document.getElementById('es-steel').textContent = steel;
+  document.getElementById('es-none').textContent  = none;
+  const gs = window._groupState || {};
+  document.getElementById('es-bodyhex').textContent = gs.body?.hex  || '—';
+  document.getElementById('es-acchex').textContent  = gs.accent?.hex || '—';
+}
+
+function renderConsoleTable(filter) {
+  const mc = window._meshConfig;
+  const wrap = document.getElementById('console-rows');
+  wrap.innerHTML = '';
+  const f = filter.toLowerCase();
+
+  const GROUP_OPTS = [
+    {v:'body',   l:'Корпус'},
+    {v:'accent', l:'Доп. элем.'},
+    {v:'none',   l:'Не красить'},
+  ];
+  const MAT_OPTS = [
+    {v:'standard', l:'Крашеный'},
+    {v:'glass',    l:'Стекло'},
+    {v:'steel',    l:'Нержавейка'},
+  ];
+
+  const entries = [...mc.entries()]
+    .filter(([name]) => !f || name.toLowerCase().includes(f))
+    .sort(([a],[b]) => a.localeCompare(b));
+
+  entries.forEach(([name, cfg]) => {
+    const row = document.createElement('div');
+    row.className = 'ct-row';
+
+    // Name
+    const nm = document.createElement('div');
+    nm.className = 'ct-name';
+    nm.textContent = name || '—';
+    nm.title = name;
+
+    // Group badge
+    const grp = document.createElement('div');
+    const gt = cfg.matType !== 'standard' ? cfg.matType : cfg.group;
+    grp.innerHTML = `<span class="ct-badge ${gt}">${GROUP_OPTS.find(o=>o.v===cfg.group)?.l || cfg.group}</span>`;
+
+    // Material badge
+    const mat = document.createElement('div');
+    mat.innerHTML = `<span class="ct-badge ${cfg.matType}">${MAT_OPTS.find(o=>o.v===cfg.matType)?.l || cfg.matType}</span>`;
+
+    // Change dropdown
+    const sel = document.createElement('select');
+    sel.className = 'ct-sel';
+    const actions = [
+      {v:'',              l:'— изменить —'},
+      {v:'grp:body',      l:'→ Корпус'},
+      {v:'grp:accent',    l:'→ Доп. элем.'},
+      {v:'grp:none',      l:'→ Не красить'},
+      {v:'mat:glass',     l:'→ Стекло'},
+      {v:'mat:steel',     l:'→ Нержавейка'},
+      {v:'mat:standard',  l:'→ Крашеный'},
+    ];
+    actions.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.v; opt.textContent = a.l;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', () => {
+      const val = sel.value;
+      if (!val) return;
+      const [kind, arg] = val.split(':');
+      // Find mesh object from meshConfig entry
+      const meshObj = cfg.meshObj;
+      if (!meshObj) { sel.value=''; return; }
+      // Temporarily set selectedMesh and call the right function
+      const prevSel = window.selectedMesh;
+      window.selectedMesh = meshObj;
+      if (kind === 'grp') window.reassignSelected(arg);
+      if (kind === 'mat') window.setMeshMaterial(arg);
+      window.selectedMesh = prevSel;
+      sel.value = '';
+      refreshConsole();
+      renderConsoleTable(document.getElementById('console-search').value);
+    });
+
+    row.append(nm, grp, mat, sel);
+    wrap.appendChild(row);
+  });
+
+  if (entries.length === 0) {
+    wrap.innerHTML = '<div style="padding:20px;color:#555;font-size:12px;">Меши не найдены</div>';
+  }
+}
+
+function buildConfigJSON() {
+  const mc = window._meshConfig;
+  const cfg = { v:1, body:[], accent:[], glass:[], steel:[], skip:[] };
+  mc.forEach((v, name) => {
+    if (!name) return;
+    if (v.matType==='glass')       cfg.glass.push(name);
+    else if (v.matType==='steel')  cfg.steel.push(name);
+    else if (v.group==='body')     cfg.body.push(name);
+    else if (v.group==='accent')   cfg.accent.push(name);
+    else                           cfg.skip.push(name);
+  });
+  const gs = window._groupState || {};
+  cfg.defaultBodyHex   = gs.body?.hex   || null;
+  cfg.defaultAccentHex = gs.accent?.hex || null;
+  return cfg;
+}
+
+function downloadConfig() {
+  const cfg  = buildConfigJSON();
+  const json = JSON.stringify(cfg, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = 'config.json';
+  a.click();
+}
+
+function copyConfig() {
+  const json = JSON.stringify(buildConfigJSON(), null, 2);
+  navigator.clipboard.writeText(json).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ Скопировано!';
+    setTimeout(() => btn.textContent = '⎘ Скопировать JSON', 2000);
+  });
+}
+</script>
+</body>
+</html>

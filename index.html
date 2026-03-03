@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typhoon Roasters — Configurator</title>
+  <style>
+    :root {
+      --bg: #0e0f12;
+      --panel: #14151a;
+      --border: #22242a;
+      --text: #e4e4e6;
+      --muted: #5a5a64;
+      --accent: #2a6de8;
+      --accent-glow: rgba(42,109,232,0.35);
+      --panel-w: 290px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      height: 100vh; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      height: 56px; display: flex; align-items: center;
+      padding: 0 20px; border-bottom: 1px solid var(--border);
+      flex-shrink: 0; gap: 12px;
+    }
+
+    .logo-wrap { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+    .logo-mark {
+      width: 30px; height: 30px; border: 2px solid var(--accent);
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 12px; font-weight: 800;
+      color: var(--accent);
+    }
+    .logo-text {
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+    }
+    .logo-text span { color: var(--accent); }
+
+    /* Model selector pills */
+    .model-selector {
+      display: flex; gap: 5px;
+      margin-left: 20px;
+    }
+    .model-btn {
+      padding: 5px 14px; border-radius: 20px;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.18s;
+      border: 1px solid var(--border);
+      background: none; color: var(--muted);
+      white-space: nowrap;
+    }
+    .model-btn:hover:not(.disabled) { border-color: #444; color: var(--text); }
+    .model-btn.active {
+      background: var(--accent); color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .model-btn.disabled {
+      opacity: 0.35; cursor: default;
+    }
+    .model-btn .soon {
+      font-size: 8px; opacity: 0.7;
+      display: block; margin-top: 1px; font-weight: 400;
+      letter-spacing: 0.05em;
+    }
+
+    .header-right {
+      margin-left: auto;
+      font-size: 10px; font-weight: 500;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── Layout ── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    #canvas-wrap { flex: 1; position: relative; cursor: grab; }
+    #canvas-wrap:active { cursor: grabbing; }
+    #canvas-wrap canvas { display: block; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--panel-w);
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      flex-shrink: 0; overflow: hidden;
+    }
+    .sidebar-scroll {
+      flex: 1; overflow-y: auto; padding: 22px 18px;
+    }
+    .sidebar-scroll::-webkit-scrollbar { width: 3px; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: #2a2a35; }
+
+    .color-section { margin-bottom: 26px; }
+    .section-label {
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px;
+    }
+
+    .selected-row {
+      display: flex; align-items: center; gap: 10px;
+      background: #1a1b20; border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 12px; margin-bottom: 10px;
+    }
+    .sel-swatch {
+      width: 34px; height: 34px; border-radius: 5px;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      flex-shrink: 0; background: #252530;
+    }
+    .sel-info .ral-code { font-size: 12px; font-weight: 600; }
+    .sel-info .ral-name { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .search {
+      width: 100%; background: #1a1b20;
+      border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-size: 12px; padding: 7px 10px;
+      margin-bottom: 8px; outline: none; transition: border-color 0.15s;
+    }
+    .search::placeholder { color: #333340; }
+    .search:focus { border-color: var(--accent); }
+
+    .ral-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 3px; max-height: 175px; overflow-y: auto;
+    }
+    .ral-grid::-webkit-scrollbar { width: 2px; }
+    .ral-grid::-webkit-scrollbar-thumb { background: #2a2a35; }
+    .sw {
+      width: 100%; aspect-ratio: 1; border-radius: 3px;
+      cursor: pointer; border: 2px solid transparent;
+      transition: transform 0.1s, border-color 0.1s;
+    }
+    .sw:hover { transform: scale(1.2); z-index: 5; border-color: rgba(255,255,255,0.5); }
+    .sw.on { border-color: #fff; transform: scale(1.1); }
+
+    .sep { height: 1px; background: var(--border); margin: 4px 0 24px; }
+
+    /* ── Bottom bar ── */
+    #bottom-bar {
+      position: absolute; bottom: 22px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(10,11,15,0.88);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 28px; padding: 8px 20px;
+      backdrop-filter: blur(12px);
+      white-space: nowrap; z-index: 10;
+    }
+    #bottom-bar .bar-label {
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+    }
+    #bottom-bar .bar-val {
+      font-size: 10px; font-weight: 600;
+      color: var(--accent); min-width: 32px; text-align: right;
+    }
+    #light-slider {
+      -webkit-appearance: none;
+      width: 120px; height: 3px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px; outline: none; cursor: pointer;
+    }
+    #light-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+      border: 2px solid #111;
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+    #light-slider::-moz-range-thumb {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--accent); cursor: pointer; border: 2px solid #111;
+    }
+    .bar-sep { width: 1px; height: 16px; background: rgba(255,255,255,0.08); }
+
+    #play-btn {
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.5); cursor: pointer; font-size: 11px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    #play-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    #play-btn.playing { border-color: var(--accent); color: var(--accent); }
+
+    #hint {
+      position: absolute; top: 14px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px; color: rgba(255,255,255,0.18);
+      pointer-events: none; letter-spacing: 0.08em; white-space: nowrap;
+    }
+
+    /* ── Canvas column ── */
+    #canvas-col {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    /* ── Infographic strip ── */
+    #info-strip {
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      padding: 18px 40px 20px;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+    }
+    .info-text {
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--muted);
+      max-width: 760px;
+    }
+    .info-text .n-total  { color: var(--accent); font-weight: 700; }
+    .info-text .n-labour { color: #a3e6b8; font-weight: 600; }
+    .info-text .n-elec   { color: #fcd27a; font-weight: 600; }
+    .info-text .n-defect { color: #fca5a5; font-weight: 600; }
+    .info-text .n-pay    { color: #ffffff; font-weight: 700; }
+
+    /* ── Loading ── */
+    #loading {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 200; transition: opacity 0.4s;
+    }
+    #loading.fade { opacity: 0; pointer-events: none; }
+    .load-logo {
+      font-size: 20px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 10px;
+    }
+    .load-logo span { color: var(--accent); }
+    .load-model {
+      font-size: 12px; color: var(--muted);
+      letter-spacing: 0.08em; margin-bottom: 32px;
+    }
+    .prog-wrap { width: 180px; height: 2px; background: #1e1e28; border-radius: 1px; overflow: hidden; }
+    .prog-fill  { height: 100%; background: var(--accent); width: 0%; transition: width 0.2s; }
+    .load-pct   { font-size: 11px; color: var(--muted); margin-top: 14px; letter-spacing: 0.04em; }
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="load-logo">Typhoon <span>Roasters</span></div>
+  <div class="load-model" id="load-model-name">Typhoon 10 PRO</div>
+  <div class="prog-wrap"><div class="prog-fill" id="prog"></div></div>
+  <div class="load-pct" id="load-txt">Loading model…</div>
+</div>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo-mark">T</div>
+    <div class="logo-text">Typhoon <span>Roasters</span></div>
+  </div>
+
+  <div class="model-selector">
+    <button class="model-btn active" data-model="10pro">Typhoon 10 PRO</button>
+    <button class="model-btn disabled" data-model="5pro">
+      Typhoon 5 PRO
+      <span class="soon">coming soon</span>
+    </button>
+    <button class="model-btn disabled" data-model="2pro">
+      Typhoon 2.5 PRO
+      <span class="soon">coming soon</span>
+    </button>
+  </div>
+
+  <div class="header-right">Configurator</div>
+</header>
+
+<div class="main">
+  <div id="canvas-col">
+    <div id="canvas-wrap">
+      <div id="hint">← Drag to rotate →</div>
+      <div id="bottom-bar">
+        <span class="bar-label">Light</span>
+        <input type="range" id="light-slider" min="0" max="100" value="12" step="1">
+        <span class="bar-val" id="light-pct">12%</span>
+        <div class="bar-sep"></div>
+        <span class="bar-label">Rotate</span>
+        <button id="play-btn" class="playing">⏸</button>
+      </div>
+    </div>
+
+    <!-- ── Infographic strip ── -->
+    <div id="info-strip">
+      <p class="info-text">
+        (Compared to a drum roaster, savings with the Typhoon 10 PRO are about
+        <span class="n-total">€5,572 per month</span> at the same utilisation:
+        labour — <span class="n-labour">€1,594</span>;
+        electricity — <span class="n-elec">€731</span>;
+        reduced defects — <span class="n-defect">€3,247</span>.
+        At 50% utilisation, payback is approximately <span class="n-pay">2 months</span>.)
+      </p>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-scroll">
+
+      <div class="color-section">
+        <div class="section-label">Body Color</div>
+        <div class="selected-row">
+          <div class="sel-swatch" id="body-sw"></div>
+          <div class="sel-info">
+            <div class="ral-code" id="body-code">—</div>
+            <div class="ral-name" id="body-name">Not selected</div>
+          </div>
+        </div>
+        <input class="search" id="s-body" type="text" placeholder="Search RAL code or name…">
+        <div class="ral-grid" id="g-body"></div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="color-section">
+        <div class="section-label">Accent Color</div>
+        <div class="selected-row">
+          <div class="sel-swatch" id="acc-sw"></div>
+          <div class="sel-info">
+            <div class="ral-code" id="acc-code">—</div>
+            <div class="ral-name" id="acc-name">Not selected</div>
+          </div>
+        </div>
+        <input class="search" id="s-acc" type="text" placeholder="Search RAL code or name…">
+        <div class="ral-grid" id="g-acc"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader }  from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+// ── Model definitions ──
+const MODELS = {
+  '10pro': { file: '1.glb',   config: 'config.json', label: 'Typhoon 10 PRO' },
+  '5pro':  { file: '5.glb',   config: 'config.json', label: 'Typhoon 5 PRO'  },
+  '2pro':  { file: '2.5.glb', config: 'config.json', label: 'Typhoon 2.5 PRO'},
+};
+let currentModel = '10pro';
+
+// ── Config ──
+let CFG = { body:[], accent:[], glass:[], steel:[], wood:[], skip:[],
+            defaultBodyHex: null, defaultAccentHex: null };
+
+async function loadConfig(url='config.json') {
+  try {
+    const r = await fetch(url);
+    if (r.ok) CFG = await r.json();
+  } catch(e) { console.warn('config.json not found — auto-detecting by colour'); }
+}
+
+// ── RAL palette ──
+const RAL = [
+  { n:'RAL 1000', name:'Green beige',        hex:'#CDBA88' },
+  { n:'RAL 1001', name:'Beige',               hex:'#D0B084' },
+  { n:'RAL 1002', name:'Sand yellow',         hex:'#D2AA6D' },
+  { n:'RAL 1003', name:'Signal yellow',       hex:'#F9A12E' },
+  { n:'RAL 1004', name:'Golden yellow',       hex:'#E49E00' },
+  { n:'RAL 1005', name:'Honey yellow',        hex:'#CB8F00' },
+  { n:'RAL 1011', name:'Brown beige',         hex:'#AF804F' },
+  { n:'RAL 1012', name:'Lemon yellow',        hex:'#DFCA00' },
+  { n:'RAL 1013', name:'Oyster white',        hex:'#E9E0D2' },
+  { n:'RAL 1014', name:'Ivory',               hex:'#E4D098' },
+  { n:'RAL 1015', name:'Light ivory',         hex:'#EAE0C8' },
+  { n:'RAL 1016', name:'Sulphur yellow',      hex:'#F0E000' },
+  { n:'RAL 1017', name:'Saffron yellow',      hex:'#F5A100' },
+  { n:'RAL 1018', name:'Zinc yellow',         hex:'#F5E000' },
+  { n:'RAL 1019', name:'Grey beige',          hex:'#A48060' },
+  { n:'RAL 1020', name:'Olive yellow',        hex:'#A0822D' },
+  { n:'RAL 1021', name:'Rape yellow',         hex:'#F4B800' },
+  { n:'RAL 1023', name:'Traffic yellow',      hex:'#F7B500' },
+  { n:'RAL 1024', name:'Ochre yellow',        hex:'#BA8F4C' },
+  { n:'RAL 1027', name:'Curry',               hex:'#A87C00' },
+  { n:'RAL 1028', name:'Melon yellow',        hex:'#FF9B00' },
+  { n:'RAL 1032', name:'Broom yellow',        hex:'#E2A400' },
+  { n:'RAL 1033', name:'Dahlia yellow',       hex:'#F79B00' },
+  { n:'RAL 1034', name:'Pastel yellow',       hex:'#EB9C52' },
+  { n:'RAL 2000', name:'Yellow orange',       hex:'#DA6600' },
+  { n:'RAL 2001', name:'Red orange',          hex:'#BA481B' },
+  { n:'RAL 2002', name:'Vermilion',           hex:'#BE3A34' },
+  { n:'RAL 2003', name:'Pastel orange',       hex:'#F47036' },
+  { n:'RAL 2004', name:'Pure orange',         hex:'#E05B00' },
+  { n:'RAL 2008', name:'Bright red orange',   hex:'#F16D31' },
+  { n:'RAL 2009', name:'Traffic orange',      hex:'#DE5B12' },
+  { n:'RAL 2010', name:'Signal orange',       hex:'#D4652F' },
+  { n:'RAL 2011', name:'Deep orange',         hex:'#EC7C25' },
+  { n:'RAL 2012', name:'Salmon orange',       hex:'#DC6444' },
+  { n:'RAL 3000', name:'Flame red',           hex:'#AB2524' },
+  { n:'RAL 3001', name:'Signal red',          hex:'#A02128' },
+  { n:'RAL 3002', name:'Carmine red',         hex:'#A1232B' },
+  { n:'RAL 3003', name:'Ruby red',            hex:'#8D1D2C' },
+  { n:'RAL 3004', name:'Purple red',          hex:'#701F29' },
+  { n:'RAL 3005', name:'Wine red',            hex:'#5E2028' },
+  { n:'RAL 3007', name:'Black red',           hex:'#3F1E24' },
+  { n:'RAL 3009', name:'Oxide red',           hex:'#712122' },
+  { n:'RAL 3011', name:'Brown red',           hex:'#7E292C' },
+  { n:'RAL 3012', name:'Beige red',           hex:'#CB8276' },
+  { n:'RAL 3013', name:'Tomato red',          hex:'#9C322E' },
+  { n:'RAL 3014', name:'Antique pink',        hex:'#D47479' },
+  { n:'RAL 3015', name:'Light pink',          hex:'#E1A6AD' },
+  { n:'RAL 3016', name:'Coral red',           hex:'#AC4034' },
+  { n:'RAL 3017', name:'Rose',                hex:'#D3545F' },
+  { n:'RAL 3018', name:'Strawberry red',      hex:'#D14152' },
+  { n:'RAL 3020', name:'Traffic red',         hex:'#CC0605' },
+  { n:'RAL 3022', name:'Salmon pink',         hex:'#D56D56' },
+  { n:'RAL 3027', name:'Raspberry red',       hex:'#B42041' },
+  { n:'RAL 3031', name:'Orient red',          hex:'#B32428' },
+  { n:'RAL 4001', name:'Red lilac',           hex:'#8D668A' },
+  { n:'RAL 4002', name:'Red violet',          hex:'#922B3E' },
+  { n:'RAL 4003', name:'Heather violet',      hex:'#DE4C8A' },
+  { n:'RAL 4004', name:'Claret violet',       hex:'#641C34' },
+  { n:'RAL 4005', name:'Blue lilac',          hex:'#6C6695' },
+  { n:'RAL 4006', name:'Traffic purple',      hex:'#A03472' },
+  { n:'RAL 4007', name:'Purple violet',       hex:'#4A192C' },
+  { n:'RAL 4008', name:'Signal violet',       hex:'#924E7D' },
+  { n:'RAL 4009', name:'Pastel violet',       hex:'#A18594' },
+  { n:'RAL 4010', name:'Telemagenta',         hex:'#CF3476' },
+  { n:'RAL 5000', name:'Violet blue',         hex:'#384C70' },
+  { n:'RAL 5001', name:'Green blue',          hex:'#1F4764' },
+  { n:'RAL 5002', name:'Ultramarine blue',    hex:'#20214F' },
+  { n:'RAL 5003', name:'Sapphire blue',       hex:'#1D334A' },
+  { n:'RAL 5005', name:'Signal blue',         hex:'#1A5784' },
+  { n:'RAL 5007', name:'Brilliant blue',      hex:'#3E5F8A' },
+  { n:'RAL 5009', name:'Azure blue',          hex:'#025669' },
+  { n:'RAL 5010', name:'Gentian blue',        hex:'#0E4C8A' },
+  { n:'RAL 5011', name:'Steel blue',          hex:'#1B2A4A' },
+  { n:'RAL 5012', name:'Light blue',          hex:'#3B83BD' },
+  { n:'RAL 5013', name:'Cobalt blue',         hex:'#1E213D' },
+  { n:'RAL 5014', name:'Pigeon blue',         hex:'#6C8198' },
+  { n:'RAL 5015', name:'Sky blue',            hex:'#2071B5' },
+  { n:'RAL 5017', name:'Traffic blue',        hex:'#0E518D' },
+  { n:'RAL 5018', name:'Turquoise blue',      hex:'#2A6478' },
+  { n:'RAL 5019', name:'Capri blue',          hex:'#1B5583' },
+  { n:'RAL 5021', name:'Water blue',          hex:'#07737A' },
+  { n:'RAL 5022', name:'Night blue',          hex:'#2A2168' },
+  { n:'RAL 5023', name:'Distant blue',        hex:'#4D668E' },
+  { n:'RAL 5024', name:'Pastel blue',         hex:'#6A93B0' },
+  { n:'RAL 6000', name:'Patina green',        hex:'#3E7460' },
+  { n:'RAL 6001', name:'Emerald green',       hex:'#2D6E4E' },
+  { n:'RAL 6003', name:'Olive green',         hex:'#4B5928' },
+  { n:'RAL 6005', name:'Moss green',          hex:'#0F4336' },
+  { n:'RAL 6007', name:'Bottle green',        hex:'#2B3A2C' },
+  { n:'RAL 6009', name:'Fir green',           hex:'#27352A' },
+  { n:'RAL 6010', name:'Grass green',         hex:'#4D6F39' },
+  { n:'RAL 6011', name:'Reseda green',        hex:'#70785E' },
+  { n:'RAL 6013', name:'Reed green',          hex:'#7C7B4D' },
+  { n:'RAL 6016', name:'Turquoise green',     hex:'#1F784C' },
+  { n:'RAL 6017', name:'May green',           hex:'#4B8B4A' },
+  { n:'RAL 6018', name:'Yellow green',        hex:'#5B8930' },
+  { n:'RAL 6019', name:'Pastel green',        hex:'#C7D9B4' },
+  { n:'RAL 6024', name:'Traffic green',       hex:'#308B6C' },
+  { n:'RAL 6025', name:'Fern green',          hex:'#5C7A4B' },
+  { n:'RAL 6029', name:'Mint green',          hex:'#2D8B57' },
+  { n:'RAL 6032', name:'Signal green',        hex:'#28895C' },
+  { n:'RAL 6034', name:'Pastel turquoise',    hex:'#88C4C0' },
+  { n:'RAL 7000', name:'Squirrel grey',       hex:'#7B8C96' },
+  { n:'RAL 7001', name:'Silver grey',         hex:'#8D9BA8' },
+  { n:'RAL 7002', name:'Olive grey',          hex:'#8B8775' },
+  { n:'RAL 7003', name:'Moss grey',           hex:'#808070' },
+  { n:'RAL 7004', name:'Signal grey',         hex:'#969EA0' },
+  { n:'RAL 7005', name:'Mouse grey',          hex:'#6C7477' },
+  { n:'RAL 7006', name:'Beige grey',          hex:'#756E60' },
+  { n:'RAL 7008', name:'Khaki grey',          hex:'#6B6245' },
+  { n:'RAL 7011', name:'Iron grey',           hex:'#52616A' },
+  { n:'RAL 7012', name:'Basalt grey',         hex:'#596165' },
+  { n:'RAL 7015', name:'Slate grey',          hex:'#5B6166' },
+  { n:'RAL 7016', name:'Anthracite grey',     hex:'#383E42' },
+  { n:'RAL 7021', name:'Black grey',          hex:'#303638' },
+  { n:'RAL 7022', name:'Umbra grey',          hex:'#3E3C3C' },
+  { n:'RAL 7023', name:'Concrete grey',       hex:'#7B7C7C' },
+  { n:'RAL 7024', name:'Graphite grey',       hex:'#474A50' },
+  { n:'RAL 7026', name:'Granite grey',        hex:'#3A4045' },
+  { n:'RAL 7030', name:'Stone grey',          hex:'#938E85' },
+  { n:'RAL 7031', name:'Blue grey',           hex:'#5B6E7C' },
+  { n:'RAL 7032', name:'Pebble grey',         hex:'#B5B0A0' },
+  { n:'RAL 7033', name:'Cement grey',         hex:'#818A79' },
+  { n:'RAL 7035', name:'Light grey',          hex:'#CBD0CC' },
+  { n:'RAL 7036', name:'Platinum grey',       hex:'#9A9697' },
+  { n:'RAL 7037', name:'Dusty grey',          hex:'#7C7F7E' },
+  { n:'RAL 7038', name:'Agate grey',          hex:'#B4B8B0' },
+  { n:'RAL 7039', name:'Quartz grey',         hex:'#6A6A68' },
+  { n:'RAL 7040', name:'Window grey',         hex:'#9BA0A6' },
+  { n:'RAL 7042', name:'Traffic grey A',      hex:'#8F9695' },
+  { n:'RAL 7043', name:'Traffic grey B',      hex:'#4E5451' },
+  { n:'RAL 7044', name:'Silk grey',           hex:'#BEC1B3' },
+  { n:'RAL 7045', name:'Telegrey 1',          hex:'#8C9295' },
+  { n:'RAL 7046', name:'Telegrey 2',          hex:'#7D848C' },
+  { n:'RAL 7047', name:'Telegrey 4',          hex:'#C5C7C4' },
+  { n:'RAL 8000', name:'Green brown',         hex:'#826C34' },
+  { n:'RAL 8001', name:'Ochre brown',         hex:'#955F20' },
+  { n:'RAL 8002', name:'Signal brown',        hex:'#6C3B2A' },
+  { n:'RAL 8003', name:'Clay brown',          hex:'#734222' },
+  { n:'RAL 8004', name:'Copper brown',        hex:'#8E402A' },
+  { n:'RAL 8007', name:'Fawn brown',          hex:'#6F4A2F' },
+  { n:'RAL 8008', name:'Olive brown',         hex:'#6F4F28' },
+  { n:'RAL 8011', name:'Nut brown',           hex:'#4F3024' },
+  { n:'RAL 8012', name:'Red brown',           hex:'#4C2F27' },
+  { n:'RAL 8014', name:'Sepia brown',         hex:'#382616' },
+  { n:'RAL 8015', name:'Chestnut brown',      hex:'#5C2E2C' },
+  { n:'RAL 8016', name:'Mahogany brown',      hex:'#4C2224' },
+  { n:'RAL 8017', name:'Chocolate brown',     hex:'#44292C' },
+  { n:'RAL 8019', name:'Grey brown',          hex:'#3D3632' },
+  { n:'RAL 8022', name:'Black brown',         hex:'#211E1D' },
+  { n:'RAL 8023', name:'Orange brown',        hex:'#7B4022' },
+  { n:'RAL 8024', name:'Beige brown',         hex:'#7B5141' },
+  { n:'RAL 8025', name:'Pale brown',          hex:'#7B6045' },
+  { n:'RAL 8028', name:'Terra brown',         hex:'#4F3829' },
+  { n:'RAL 9001', name:'Cream',               hex:'#FDF4E3' },
+  { n:'RAL 9002', name:'Grey white',          hex:'#E7EBDA' },
+  { n:'RAL 9003', name:'Signal white',        hex:'#F4F4F4' },
+  { n:'RAL 9004', name:'Signal black',        hex:'#2B2B2C' },
+  { n:'RAL 9005', name:'Jet black',           hex:'#0A0A0A' },
+  { n:'RAL 9006', name:'White aluminium',     hex:'#A5A5A5' },
+  { n:'RAL 9007', name:'Grey aluminium',      hex:'#8F8F8F' },
+  { n:'RAL 9010', name:'Pure white',          hex:'#FFFFFF' },
+  { n:'RAL 9011', name:'Graphite black',      hex:'#272727' },
+  { n:'RAL 9016', name:'Traffic white',       hex:'#F6F6F6' },
+  { n:'RAL 9017', name:'Traffic black',       hex:'#1C1C1C' },
+  { n:'RAL 9018', name:'Papyrus white',       hex:'#D7D7D0' },
+];
+
+// ── Helpers ──
+function makeGlassMaterial() {
+  return new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color(0.88, 0.96, 1.0),
+    transmission: 0.93, transparent: true, opacity: 1.0,
+    roughness: 0.06, metalness: 0.0, ior: 1.50, thickness: 2.5,
+    attenuationColor: new THREE.Color(0.8, 0.95, 1.0),
+    attenuationDistance: 8,
+    envMapIntensity: 0.08, side: THREE.DoubleSide, depthWrite: false,
+  });
+}
+function makeSteelMaterial() {
+  return new THREE.MeshStandardMaterial({
+    color: new THREE.Color(0.72, 0.72, 0.72),
+    metalness: 0.88, roughness: 0.38,
+  });
+}
+function makeWoodMaterial() {
+  return new THREE.MeshStandardMaterial({
+    color: new THREE.Color(0.22, 0.11, 0.05),
+    metalness: 0.0, roughness: 0.70,
+  });
+}
+function classifyMaterial(mat) {
+  if (!mat?.color) return 'none';
+  const srgb = mat.color.clone().convertLinearToSRGB();
+  const hsl = { h:0, s:0, l:0 };
+  srgb.getHSL(hsl);
+  if (hsl.s > 0.18 && hsl.l > 0.05 && hsl.l < 0.90) return 'body';
+  if (hsl.l > 0.55 && hsl.s < 0.18) return 'accent';
+  return 'none';
+}
+
+// ── Scene ──
+const wrap = document.getElementById('canvas-wrap');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 2.3;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+wrap.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const bgCv = document.createElement('canvas');
+bgCv.width = 2; bgCv.height = 512;
+const bgCtx = bgCv.getContext('2d');
+const grd = bgCtx.createLinearGradient(0,0,0,512);
+grd.addColorStop(0,'#18191e'); grd.addColorStop(1,'#0a0b0e');
+bgCtx.fillStyle = grd; bgCtx.fillRect(0,0,2,512);
+scene.background = new THREE.CanvasTexture(bgCv);
+
+const camera = new THREE.PerspectiveCamera(38, wrap.clientWidth/wrap.clientHeight, 0.01, 500);
+
+// ── Lights ──
+scene.add(new THREE.AmbientLight(0xffffff, 0.60));
+const lightRig = new THREE.Group(); scene.add(lightRig);
+
+const key = new THREE.DirectionalLight(0xfff8f0, 4.6);
+key.position.set(4, 7, 5); key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -0.001;
+lightRig.add(key);
+
+const fill = new THREE.DirectionalLight(0xddeeff, 2.1);
+fill.position.set(-5, 4, -3); lightRig.add(fill);
+
+const rim = new THREE.DirectionalLight(0xffffff, 1.3);
+rim.position.set(0, -2, -6); lightRig.add(rim);
+
+// Ground shadow
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(30,30),
+  new THREE.ShadowMaterial({ opacity: 0.25 })
+);
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+const gridHelper = new THREE.GridHelper(14, 28, 0x22242a, 0x1a1c20); scene.add(gridHelper);
+
+// Light slider (0–100%)
+const lightSlider = document.getElementById('light-slider');
+const lightPct    = document.getElementById('light-pct');
+lightSlider.addEventListener('input', e => {
+  const pct = Number(e.target.value);
+  lightRig.rotation.y = THREE.MathUtils.degToRad(pct * 3.6);
+  lightPct.textContent = pct + '%';
+});
+
+const pivot = new THREE.Group(); scene.add(pivot);
+
+// ── Rotation / drag ──
+let dragging=false, lastX=0, autoSpin=true;
+const cvs = renderer.domElement;
+const playBtn = document.getElementById('play-btn');
+
+playBtn.addEventListener('click', () => {
+  autoSpin = !autoSpin;
+  playBtn.textContent = autoSpin ? '⏸' : '▶';
+  playBtn.className   = autoSpin ? 'playing' : '';
+});
+
+cvs.addEventListener('mousedown', e => {
+  dragging=true; lastX=e.clientX; autoSpin=false;
+  playBtn.textContent='▶'; playBtn.className='';
+});
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  pivot.rotation.y += (e.clientX - lastX) * 0.008; lastX = e.clientX;
+});
+window.addEventListener('mouseup', () => { dragging=false; });
+cvs.addEventListener('touchstart', e => {
+  dragging=true; lastX=e.touches[0].clientX; autoSpin=false;
+  playBtn.textContent='▶'; playBtn.className='';
+}, {passive:true});
+window.addEventListener('touchmove', e => {
+  if (!dragging) return;
+  pivot.rotation.y += (e.touches[0].clientX-lastX)*0.008; lastX=e.touches[0].clientX;
+}, {passive:true});
+window.addEventListener('touchend', () => { dragging=false; });
+window.addEventListener('resize', () => {
+  camera.aspect = wrap.clientWidth/wrap.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+});
+
+// ── Materials ──
+let bodyMats=[], accentMats=[];
+const groupState = {
+  body:   { hex: null, roughness: 0.70, metalness: 0.60 },
+  accent: { hex: null, roughness: 0.69, metalness: 0.58 },
+};
+
+function applyGroup(group) {
+  const mats = group==='body' ? bodyMats : accentMats;
+  const s = groupState[group];
+  const col = s.hex ? new THREE.Color().setStyle(s.hex) : null;
+  mats.forEach(m => {
+    if (col && m.color!==undefined) m.color.set(col);
+    m.roughness=s.roughness; m.metalness=s.metalness; m.needsUpdate=true;
+  });
+}
+
+// ── Load model ──
+const draco = new DRACOLoader();
+draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/libs/draco/');
+const loader = new GLTFLoader();
+loader.setDRACOLoader(draco);
+
+async function loadModel(modelKey) {
+  const def = MODELS[modelKey];
+  currentModel = modelKey;
+
+  // Reset materials
+  bodyMats = []; accentMats = [];
+  groupState.body.hex = null; groupState.accent.hex = null;
+
+  // Clear existing model from pivot
+  while(pivot.children.length) pivot.remove(pivot.children[0]);
+
+  // Update loading screen
+  document.getElementById('load-model-name').textContent = def.label;
+  document.getElementById('load-txt').textContent = 'Loading model…';
+  document.getElementById('prog').style.width = '0%';
+  const ld = document.getElementById('loading');
+  ld.style.display = 'flex'; ld.style.opacity = '1';
+  ld.classList.remove('fade');
+
+  await loadConfig(def.config);
+
+  const SKIP_PREFIXES = ['SMALL_BOLT','BIG_BOLT','BOLT_3','4_Instance','Capsule',
+                         '_RE_C6_','WIRE_','SIGNS','signs_','screen_'];
+  function shouldSkip(n) { return SKIP_PREFIXES.some(p => n.startsWith(p)); }
+
+  const hasExplicit = CFG.body.length>0 || CFG.accent.length>0 ||
+                      CFG.glass.length>0 || CFG.steel.length>0;
+
+  loader.load(def.file,
+    gltf => {
+      const model = gltf.scene;
+      pivot.add(model);
+
+      model.traverse(obj => {
+        if (!obj.isMesh) return;
+        obj.castShadow=true; obj.receiveShadow=true;
+
+        if (CFG.glass.includes(obj.name)) {
+          obj.material=makeGlassMaterial(); obj.castShadow=false; return;
+        }
+        if (CFG.steel.includes(obj.name)) {
+          obj.material=makeSteelMaterial(); return;
+        }
+        if (CFG.wood && CFG.wood.includes(obj.name)) {
+          obj.material=makeWoodMaterial(); return;
+        }
+
+        const raw = Array.isArray(obj.material) ? obj.material : [obj.material];
+        const cloned = raw.map(m => m.clone());
+        obj.material = cloned.length===1 ? cloned[0] : cloned;
+
+        cloned.forEach(m => {
+          if (hasExplicit) {
+            if (CFG.body.includes(obj.name))         { bodyMats.push(m);   m.roughness=0.70; m.metalness=0.60; }
+            else if (CFG.accent.includes(obj.name))  { accentMats.push(m); m.roughness=0.69; m.metalness=0.58; }
+          } else {
+            if (!shouldSkip(obj.name)) {
+              const grp = classifyMaterial(m);
+              if (grp==='body')   { bodyMats.push(m); m.roughness=0.70; m.metalness=0.60; }
+              if (grp==='accent') { accentMats.push(m); m.roughness=0.69; m.metalness=0.58; }
+            }
+          }
+        });
+      });
+
+      // Apply default colours
+      if (CFG.defaultBodyHex)   { groupState.body.hex=CFG.defaultBodyHex;     applyGroup('body'); }
+      if (CFG.defaultAccentHex) { groupState.accent.hex=CFG.defaultAccentHex; applyGroup('accent'); }
+
+      // ── Fit camera — centre model in viewport ──
+      const box    = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      const size   = box.getSize(new THREE.Vector3());
+      const maxD   = Math.max(size.x, size.y, size.z);
+
+      // Translate model so its centre is at origin
+      model.position.sub(center);
+
+      // Place ground at model bottom
+      ground.position.y     = -size.y * 0.5;
+      gridHelper.position.y = -size.y * 0.5 + 0.02;
+
+      // Camera: eye slightly above centre, looking straight at centre
+      camera.position.set(0, maxD * 0.08, maxD * 1.85);
+      camera.lookAt(0, -maxD * 0.14, 0);
+
+      ld.classList.add('fade');
+      setTimeout(() => { ld.style.display='none'; }, 450);
+    },
+    xhr => {
+      if (!xhr.total) return;
+      const p = Math.round(xhr.loaded/xhr.total*100);
+      document.getElementById('prog').style.width = p+'%';
+      document.getElementById('load-txt').textContent = `Loading… ${p}%`;
+    },
+    err => {
+      document.getElementById('load-txt').textContent = '⚠ Error: ' + err.message;
+      console.error(err);
+    }
+  );
+}
+
+// ── Model selector buttons ──
+document.querySelectorAll('.model-btn:not(.disabled)').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.model === currentModel) return;
+    document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadModel(btn.dataset.model);
+  });
+});
+
+// Initial load
+loadModel('10pro');
+
+// ── Render loop ──
+(function loop() {
+  requestAnimationFrame(loop);
+  if (autoSpin) pivot.rotation.y += 0.0025;
+  renderer.render(scene, camera);
+})();
+
+// ── RAL pickers ──
+function buildPicker({ gridId, searchId, swatchId, codeId, nameId, group }) {
+  const grid=document.getElementById(gridId), search=document.getElementById(searchId);
+  const sw=document.getElementById(swatchId), code=document.getElementById(codeId);
+  const nm=document.getElementById(nameId);
+  let active=null;
+
+  function render(q='') {
+    grid.innerHTML='';
+    const f=q.toLowerCase();
+    RAL.filter(r => !f || r.n.toLowerCase().includes(f) || r.name.toLowerCase().includes(f))
+      .forEach(r => {
+        const el=document.createElement('div');
+        el.className='sw'+(active===r.n?' on':'');
+        el.style.background=r.hex;
+        el.title=`${r.n} — ${r.name}`;
+        el.addEventListener('click', () => {
+          active=r.n; sw.style.background=r.hex;
+          code.textContent=r.n; nm.textContent=r.name;
+          groupState[group].hex=r.hex; applyGroup(group);
+          render(search.value);
+        });
+        grid.appendChild(el);
+      });
+  }
+  search.addEventListener('input', () => render(search.value));
+  render();
+}
+
+buildPicker({ gridId:'g-body', searchId:'s-body', swatchId:'body-sw',
+              codeId:'body-code', nameId:'body-name', group:'body' });
+buildPicker({ gridId:'g-acc',  searchId:'s-acc',  swatchId:'acc-sw',
+              codeId:'acc-code',  nameId:'acc-name',  group:'accent' });
+</script>
+</body>
+</html>
