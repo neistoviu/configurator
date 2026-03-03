@@ -33,8 +33,18 @@
       flex-shrink: 0; gap: 12px;
     }
 
-    .logo-wrap { display: flex; align-items: center; flex-shrink: 0; }
-    .logo-img { height: 22px; width: auto; display: block; }
+    .logo-wrap { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+    .logo-mark {
+      width: 30px; height: 30px; border: 2px solid var(--accent);
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 12px; font-weight: 800;
+      color: var(--accent);
+    }
+    .logo-text {
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+    }
+    .logo-text span { color: var(--accent); }
 
     /* Model selector pills (desktop) */
     .model-selector {
@@ -240,7 +250,8 @@
         position: absolute; top: 0; left: 0; right: 0;
         z-index: 15;
       }
-      .logo-img { height: 18px; }
+      .logo-mark { width: 22px; height: 22px; font-size: 9px; }
+      .logo-text { font-size: 10px; }
       .model-selector { display: none; }
       #model-dropdown {
         display: block; margin-left: auto;
@@ -272,10 +283,11 @@
         pointer-events: none; background: none;
       }
       .info-text {
-        font-size: 10px !important; line-height: 1.5 !important;
-        color: rgba(255,255,255,0.28) !important;
-        max-width: none; text-align: left;
+        font-size: 11px !important; line-height: 1.5 !important;
+        color: rgba(255,255,255,0.16) !important;
+        max-width: none; text-align: center;
       }
+      .info-text .mob-hide { display: none; }
 
       #bottom-bar {
         bottom: 10px; padding: 6px 14px; gap: 8px;
@@ -483,7 +495,8 @@
 
 <header>
   <div class="logo-wrap">
-    <img src="logo.png" alt="Typhoon Roasters" class="logo-img">
+    <div class="logo-mark">T</div>
+    <div class="logo-text">Typhoon <span>Roasters</span></div>
   </div>
 
   <div class="model-selector">
@@ -522,12 +535,12 @@
       <!-- Info strip: below canvas on desktop, overlaid on mobile -->
       <div id="info-strip">
         <p class="info-text">
-          (Compared to a drum roaster, savings with the Typhoon 10 PRO are about
-          <span class="n-total">€5,572 per month</span> at the same utilisation:
+          Compared to a drum roaster, savings with the Typhoon 10 PRO are about
+          <span class="n-total">€5,572 per month</span> at the same utilisation<span class="mob-hide">:
           labour — <span class="n-labour">€1,594</span>;
           electricity — <span class="n-elec">€731</span>;
           reduced defects — <span class="n-defect">€3,247</span>.
-          At 50% utilisation, payback is approximately <span class="n-pay">2 months</span>.)
+          At 50% utilisation, payback is approximately <span class="n-pay">2 months</span></span>.
         </p>
       </div>
     </div>
@@ -1071,9 +1084,13 @@ async function loadModel(modelKey) {
       ground.position.y     = -size.y * 0.5;
       gridHelper.position.y = -size.y * 0.5 + 0.02;
 
-      // Camera: eye slightly above centre, looking straight at centre
-      camera.position.set(0, maxD * 0.08, maxD * 1.85);
-      camera.lookAt(0, -maxD * 0.14, 0);
+      if (isMobile) {
+        camera.position.set(0, -maxD * 0.02, maxD * 2.15);
+        camera.lookAt(0, -maxD * 0.10, 0);
+      } else {
+        camera.position.set(0, maxD * 0.08, maxD * 1.85);
+        camera.lookAt(0, -maxD * 0.14, 0);
+      }
 
       ld.classList.add('fade');
       setTimeout(() => { ld.style.display='none'; }, 450);
