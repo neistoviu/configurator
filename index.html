@@ -224,13 +224,13 @@
     .info-text {
       font-size: 14px;
       line-height: 1.7;
-      color: var(--muted);
+      color: rgba(255,255,255,0.85);
       max-width: 760px;
     }
     .info-text .n-total  { color: var(--accent); font-weight: 700; }
-    .info-text .n-labour { color: #a3e6b8; font-weight: 600; }
-    .info-text .n-elec   { color: #fcd27a; font-weight: 600; }
-    .info-text .n-defect { color: #fca5a5; font-weight: 600; }
+    .info-text .n-labour { color: #6ee7a0; font-weight: 700; }
+    .info-text .n-elec   { color: #fcd27a; font-weight: 700; }
+    .info-text .n-defect { color: #fca5a5; font-weight: 700; }
     .info-text .n-pay    { color: #ffffff; font-weight: 700; }
 
     /* ── Mobile ── */
@@ -284,13 +284,7 @@
       }
       .info-text .mob-hide { display: none; }
 
-      #bottom-bar {
-        bottom: 10px; padding: 6px 14px; gap: 8px;
-        border-radius: 22px;
-      }
-      #bottom-bar .bar-label { font-size: 8px; }
-      #bottom-bar .bar-val { font-size: 9px; }
-      #light-slider { width: 80px; }
+      #bottom-bar { display: none; }
       .sidebar {
         width: 100%; flex-shrink: 0;
         border-left: none; border-top: 1px solid var(--border);
@@ -455,6 +449,19 @@
     }
     .modal-submit:hover { background: #3578f2; }
 
+    .config-summary {
+      display: flex; gap: 12px; margin-top: 10px;
+      padding: 12px; background: #1a1b20;
+      border: 1px solid var(--border); border-radius: 8px;
+    }
+    .config-item { display: flex; align-items: center; gap: 8px; flex: 1; }
+    .config-swatch {
+      width: 28px; height: 28px; border-radius: 5px;
+      border: 1.5px solid rgba(255,255,255,0.1); flex-shrink: 0;
+    }
+    .config-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .config-value { font-size: 12px; font-weight: 600; color: var(--text); }
+
     /* ── Loading ── */
     #loading {
       position: fixed; inset: 0; background: var(--bg);
@@ -616,6 +623,18 @@
       <option value="replacing">Replacing current equipment</option>
       <option value="research">Just researching options</option>
     </select>
+
+    <div class="modal-section-label" style="margin-top: 22px;">Your configuration</div>
+    <div class="config-summary">
+      <div class="config-item">
+        <div class="config-swatch" id="cfg-body-sw"></div>
+        <div><div class="config-label">Body</div><div class="config-value" id="cfg-body-val">Default</div></div>
+      </div>
+      <div class="config-item">
+        <div class="config-swatch" id="cfg-acc-sw"></div>
+        <div><div class="config-label">Accent</div><div class="config-value" id="cfg-acc-val">Default</div></div>
+      </div>
+    </div>
 
     <textarea id="of-details" placeholder="Let us know any details or features you're looking for" style="margin-top: 10px;"></textarea>
 
@@ -911,6 +930,11 @@ const gridHelper = new THREE.GridHelper(14, 28, 0x22242a, 0x1a1c20); scene.add(g
 // Light slider (0–100%)
 const lightSlider = document.getElementById('light-slider');
 const lightPct    = document.getElementById('light-pct');
+if (isMobile) {
+  lightSlider.value = 34;
+  lightPct.textContent = '34%';
+  lightRig.rotation.y = THREE.MathUtils.degToRad(34 * 3.6);
+}
 lightSlider.addEventListener('input', e => {
   const pct = Number(e.target.value);
   lightRig.rotation.y = THREE.MathUtils.degToRad(pct * 3.6);
@@ -1154,7 +1178,15 @@ const ofClose   = document.getElementById('modal-close');
 const ofBtn     = document.getElementById('offer-btn');
 const ofSubmit  = document.getElementById('of-submit');
 
-ofBtn.addEventListener('click', () => ofOverlay.classList.add('open'));
+ofBtn.addEventListener('click', () => {
+  const bodyRal = RAL.find(r => r.hex === groupState.body.hex);
+  const accRal  = RAL.find(r => r.hex === groupState.accent.hex);
+  document.getElementById('cfg-body-sw').style.background = groupState.body.hex || '#252530';
+  document.getElementById('cfg-acc-sw').style.background  = groupState.accent.hex || '#252530';
+  document.getElementById('cfg-body-val').textContent = bodyRal ? bodyRal.n : 'Default';
+  document.getElementById('cfg-acc-val').textContent  = accRal  ? accRal.n  : 'Default';
+  ofOverlay.classList.add('open');
+});
 ofClose.addEventListener('click', () => ofOverlay.classList.remove('open'));
 ofOverlay.addEventListener('click', e => {
   if (e.target === ofOverlay) ofOverlay.classList.remove('open');
@@ -1167,10 +1199,12 @@ ofSubmit.addEventListener('click', () => {
                   document.getElementById('of-phone').value.trim();
   const status  = document.getElementById('of-status').value;
   const details = document.getElementById('of-details').value.trim();
+  const bodyRalName = RAL.find(r => r.hex === groupState.body.hex);
+  const accRalName  = RAL.find(r => r.hex === groupState.accent.hex);
   const config  = {
     model: MODELS[currentModel].label,
-    bodyColor:   groupState.body.hex   || 'default',
-    accentColor: groupState.accent.hex || 'default',
+    bodyColor:   bodyRalName ? `${bodyRalName.n} (${bodyRalName.hex})` : 'default',
+    accentColor: accRalName  ? `${accRalName.n} (${accRalName.hex})`  : 'default',
   };
 
   if (!name || !email) {
