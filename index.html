@@ -884,6 +884,25 @@ const RAL = [
 ];
 
 // ── Helpers ──
+const IMAGE_GLASS_MESHES = {
+  'ALL1_22': 'glass-reflection-cafe.png',
+};
+const glassTextureLoader = new THREE.TextureLoader();
+const glassTextureCache = new Map();
+
+function getGlassImageTexture(url) {
+  if (!glassTextureCache.has(url)) {
+    const texture = glassTextureLoader.load(url);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.flipY = false;
+    texture.needsUpdate = true;
+    glassTextureCache.set(url, texture);
+  }
+  return glassTextureCache.get(url);
+}
+
 function makeGlassMaterial() {
   return new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(0.88, 0.96, 1.0),
@@ -892,6 +911,22 @@ function makeGlassMaterial() {
     attenuationColor: new THREE.Color(0.8, 0.95, 1.0),
     attenuationDistance: 16,
     envMapIntensity: 0.02, side: THREE.DoubleSide, depthWrite: false,
+  });
+}
+function makeImageGlassMaterial(url) {
+  return new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color(1.0, 1.0, 1.0),
+    map: getGlassImageTexture(url),
+    transmission: 0.72,
+    transparent: true,
+    opacity: 0.92,
+    roughness: 0.32,
+    metalness: 0.0,
+    ior: 1.45,
+    thickness: 0.6,
+    envMapIntensity: 0.0,
+    side: THREE.DoubleSide,
+    depthWrite: false,
   });
 }
 function makeSteelMaterial() {
@@ -1079,6 +1114,12 @@ async function loadModel(modelKey) {
         if (!obj.isMesh) return;
         obj.castShadow=true; obj.receiveShadow=true;
 
+        const imageGlassUrl = IMAGE_GLASS_MESHES[obj.name];
+        if (imageGlassUrl) {
+          obj.material = makeImageGlassMaterial(imageGlassUrl);
+          obj.castShadow = false;
+          return;
+        }
         if (CFG.glass.includes(obj.name)) {
           obj.material=makeGlassMaterial(); obj.castShadow=false; return;
         }

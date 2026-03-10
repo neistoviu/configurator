@@ -833,6 +833,24 @@ function shouldSkip(name) {
 // Стеклянные меши — получают MeshPhysicalMaterial, не красятся
 // ================================================================
 const GLASS_MESHES = ['ALL1_37'];
+const IMAGE_GLASS_MESHES = {
+  'ALL1_22': 'glass-reflection-cafe.png',
+};
+const glassTextureLoader = new THREE.TextureLoader();
+const glassTextureCache = new Map();
+
+function getGlassImageTexture(url) {
+  if (!glassTextureCache.has(url)) {
+    const texture = glassTextureLoader.load(url);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.flipY = false;
+    texture.needsUpdate = true;
+    glassTextureCache.set(url, texture);
+  }
+  return glassTextureCache.get(url);
+}
 
 function makeGlassMaterial() {
   return new THREE.MeshPhysicalMaterial({
@@ -849,6 +867,23 @@ function makeGlassMaterial() {
     envMapIntensity: 0.02,   // почти без отражений, чтобы читалось как стекло
     side:            THREE.DoubleSide,
     depthWrite:      false,
+  });
+}
+
+function makeImageGlassMaterial(url) {
+  return new THREE.MeshPhysicalMaterial({
+    color:            new THREE.Color(1.0, 1.0, 1.0),
+    map:              getGlassImageTexture(url),
+    transmission:     0.72,
+    transparent:      true,
+    opacity:          0.92,
+    roughness:        0.32,
+    metalness:        0.0,
+    ior:              1.45,
+    thickness:        0.6,
+    envMapIntensity:  0.0,
+    side:             THREE.DoubleSide,
+    depthWrite:       false,
   });
 }
 
@@ -1583,6 +1618,16 @@ loader.load(modelFile,
 
       // Сохраняем оригинал для возможного восстановления из стекло/сталь → краска
       meshOrigMat.set(obj.uuid, obj.material);
+
+      const imageGlassUrl = IMAGE_GLASS_MESHES[obj.name];
+      if (imageGlassUrl) {
+        const gm = makeImageGlassMaterial(imageGlassUrl);
+        obj.material = gm;
+        obj.castShadow = false;
+        matRegistry.set(gm.uuid, { mat: gm, meshObj: obj, group: 'none', matType: 'glass' });
+        meshConfig.set(obj.name, { group: 'none', matType: 'glass', meshObj: obj });
+        return;
+      }
 
       // ── Предустановленные стеклянные меши ──
       if (GLASS_MESHES.includes(obj.name)) {

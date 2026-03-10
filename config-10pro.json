@@ -41,14 +41,15 @@
     "ALL1_11",
     "NAUO5-metal",
     "ALL_2",
-    "ALL1_22",
     "ALL1_23",
     "handle_1",
     "blue",
     "ALL1_24",
     "ALL_4"
   ],
-  "glass": [],
+  "glass": [
+    "ALL1_22"
+  ],
   "steel": [
     "accent_mix",
     "BIG_BOLT_208",
