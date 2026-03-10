@@ -693,7 +693,7 @@ let CFG = createDefaultConfig();
 async function loadConfig(url='config.json') {
   CFG = createDefaultConfig();
   try {
-    const r = await fetch(url);
+    const r = await fetch(url + '?v=' + Date.now(), { cache: 'no-store' });
     if (r.ok) {
       const loaded = await r.json();
       CFG = {
