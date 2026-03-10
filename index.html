@@ -502,6 +502,7 @@
   <div class="model-selector">
     <button class="model-btn active" data-model="10pro">Typhoon 10 PRO</button>
     <button class="model-btn" data-model="newroaster1">New Roaster 1</button>
+    <button class="model-btn" data-model="newroaster2">New Roaster 2</button>
     <button class="model-btn disabled" data-model="5pro">
       Typhoon 5 PRO
       <span class="soon">coming soon</span>
@@ -515,6 +516,7 @@
   <select id="model-dropdown">
     <option value="10pro" selected>Typhoon 10 PRO</option>
     <option value="newroaster1">New Roaster 1</option>
+    <option value="newroaster2">New Roaster 2</option>
     <option value="5pro" disabled>Typhoon 5 PRO — coming soon</option>
     <option value="2pro" disabled>Typhoon 2.5 PRO — coming soon</option>
   </select>
@@ -661,7 +663,8 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 // ── Model definitions ──
 const MODELS = {
   '10pro': { file: '1.glb',   config: 'config.json', label: 'Typhoon 10 PRO' },
-  'newroaster1': { file: 'new-roaster.glb', config: 'config.json', label: 'New Roaster 1' },
+  'newroaster1': { file: 'new-roaster-1.glb', config: 'config-new-roaster-1.json', label: 'New Roaster 1' },
+  'newroaster2': { file: 'new-roaster-2.glb', config: 'config-new-roaster-2.json', label: 'New Roaster 2' },
   '5pro':  { file: '5.glb',   config: 'config.json', label: 'Typhoon 5 PRO'  },
   '2pro':  { file: '2.5.glb', config: 'config.json', label: 'Typhoon 2.5 PRO'},
 };
