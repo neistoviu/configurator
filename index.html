@@ -270,19 +270,7 @@
       #canvas-col { flex: 1; min-height: 0; }
       #canvas-wrap { flex: 1; padding-top: 0; }
 
-      #info-strip {
-        display: block;
-        position: absolute; top: 44px; left: 12px; right: 12px;
-        border: none; padding: 0; z-index: 5;
-        pointer-events: none; background: none;
-      }
-      .info-text {
-        font-size: 15px !important; line-height: 1.5 !important;
-        color: rgba(255,255,255,0.55) !important;
-        max-width: none; text-align: center;
-        font-weight: 500;
-      }
-      .info-text .mob-hide { display: none; }
+      #info-strip { display: none; }
 
       #bottom-bar { display: none; }
       .sidebar {
@@ -290,55 +278,60 @@
         border-left: none; border-top: 1px solid var(--border);
         flex-direction: column;
         max-height: none;
+        position: relative;
+        overflow: visible;
       }
 
       .color-block {
         flex: none; overflow-x: hidden; overflow-y: hidden;
-        padding: 6px 12px; min-height: 0;
+        padding: 8px 12px; min-height: 0;
       }
       .color-block + .color-block { border-top: 1px solid var(--border); }
 
       .color-section {
         display: flex; align-items: center;
-        gap: 6px; margin-bottom: 0;
+        gap: 8px; margin-bottom: 0;
       }
 
       .section-label {
         position: static; background: none;
         padding: 0; margin-bottom: 0;
-        font-size: 7px; white-space: nowrap;
-        flex-shrink: 0; min-width: 38px;
+        font-size: 8px; white-space: nowrap;
+        flex-shrink: 0; min-width: 46px;
       }
 
       .selected-row {
-        flex-shrink: 0; padding: 3px 6px; margin-bottom: 0;
-        border-radius: 5px; gap: 5px;
+        flex-shrink: 0; padding: 4px 8px; margin-bottom: 0;
+        border-radius: 6px; gap: 6px;
       }
-      .sel-swatch { width: 22px; height: 22px; border-radius: 3px; }
-      .sel-info .ral-code { font-size: 9px; }
+      .sel-swatch { width: 28px; height: 28px; border-radius: 4px; }
+      .sel-info .ral-code { font-size: 10px; }
       .sel-info .ral-name { display: none; }
 
       .search { display: none; }
 
       .ral-grid {
-        display: flex; flex-wrap: nowrap; gap: 3px;
+        display: flex; flex-wrap: nowrap; gap: 5px;
         overflow-x: auto; overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
-        padding-bottom: 2px; flex: 1; min-width: 0;
+        padding-bottom: 3px; flex: 1; min-width: 0;
       }
       .ral-grid::-webkit-scrollbar { height: 3px; }
       .ral-grid::-webkit-scrollbar-thumb { background: #3a3a48; border-radius: 2px; }
 
       .sw {
-        width: 28px; height: 28px; min-width: 28px;
-        aspect-ratio: auto; border-radius: 4px; flex-shrink: 0;
+        width: 36px; height: 36px; min-width: 36px;
+        aspect-ratio: auto; border-radius: 5px; flex-shrink: 0;
       }
       .sw:hover { transform: none; }
 
       #offer-btn {
-        width: calc(100% - 24px); margin: 6px 12px 10px;
-        padding: 11px 0; font-size: 11px;
-        border-radius: 8px;
+        position: absolute;
+        left: 12px; right: 12px; top: -56px;
+        width: auto; margin: 0;
+        padding: 12px 0; font-size: 11px;
+        border-radius: 10px;
+        z-index: 12;
       }
 
       .modal { padding: 24px 20px 20px; }
