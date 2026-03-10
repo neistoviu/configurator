@@ -491,6 +491,7 @@
     .ct-badge.none   { background: #1e1e1e; color: #666; border: 1px solid #333; }
     .ct-badge.glass  { background: #0d1e2a; color: #7df; border: 1px solid #44aacc; }
     .ct-badge.steel  { background: #1e1e22; color: #ccc; border: 1px solid #888; }
+    .ct-badge.wood   { background: #24170f; color: #d6b28b; border: 1px solid #7f5b3a; }
 
     .ct-sel {
       background: #1a1b1e; border: 1px solid var(--border);
@@ -644,6 +645,7 @@
     }
     .ms-btn.glass-on { border-color: #44aacc; color: #7df; background: #0d1e2a; }
     .ms-btn.steel-on { border-color: #aaaaaa; color: #ddd; background: #1e1e22; }
+    .ms-btn.wood-on  { border-color: #7f5b3a; color: #d6b28b; background: #24170f; }
     .ms-btn.std-on   { border-color: var(--accent); color: var(--accent); background: #1e1a0d; }
   </style>
 </head>
@@ -703,6 +705,7 @@
       <div class="ms-btn" id="ms-mat-std"   onclick="setMeshMaterial('standard')">Крашеный</div>
       <div class="ms-btn" id="ms-mat-glass" onclick="setMeshMaterial('glass')">🔲 Стекло</div>
       <div class="ms-btn" id="ms-mat-steel" onclick="setMeshMaterial('steel')">⬜ Нержавейка</div>
+      <div class="ms-btn" id="ms-mat-wood"  onclick="setMeshMaterial('wood')">🪵 Дерево</div>
     </div>
   </div>
 
@@ -834,16 +837,16 @@ const GLASS_MESHES = ['ALL1_37'];
 function makeGlassMaterial() {
   return new THREE.MeshPhysicalMaterial({
     color:           new THREE.Color(0.88, 0.96, 1.0), // слабый голубой тинт
-    transmission:    0.93,   // физическая прозрачность
+    transmission:    0.96,   // физическая прозрачность
     transparent:     true,
     opacity:         1.0,
-    roughness:       0.06,   // гладкое стекло
+    roughness:       0.14,   // немного мягче, чтобы не выглядело зеркалом
     metalness:       0.0,
     ior:             1.50,   // стандартный IOR стекла
-    thickness:       2.5,
+    thickness:       1.8,
     attenuationColor: new THREE.Color(0.8, 0.95, 1.0),
-    attenuationDistance: 8,
-    envMapIntensity: 0.08,   // минимум — иначе выглядит как зеркало
+    attenuationDistance: 16,
+    envMapIntensity: 0.02,   // почти без отражений, чтобы читалось как стекло
     side:            THREE.DoubleSide,
     depthWrite:      false,
   });
@@ -855,6 +858,15 @@ function makeSteelMaterial() {
     metalness:       0.88,
     roughness:       0.38,   // матовая нержавейка (полировка ~320-grit)
     envMapIntensity: 0.5,
+  });
+}
+
+function makeWoodMaterial() {
+  return new THREE.MeshStandardMaterial({
+    color:           new THREE.Color(0.22, 0.11, 0.05),
+    metalness:       0.0,
+    roughness:       0.70,
+    envMapIntensity: 0.18,
   });
 }
 
@@ -1384,6 +1396,7 @@ function showMeshPanel(mesh) {
   document.getElementById('ms-mat-std').className   = 'ms-btn' + (mtype === 'standard' ? ' std-on'   : '');
   document.getElementById('ms-mat-glass').className = 'ms-btn' + (mtype === 'glass'    ? ' glass-on' : '');
   document.getElementById('ms-mat-steel').className = 'ms-btn' + (mtype === 'steel'    ? ' steel-on' : '');
+  document.getElementById('ms-mat-wood').className  = 'ms-btn' + (mtype === 'wood'     ? ' wood-on'  : '');
 
   panel.classList.add('show');
 }
@@ -1440,7 +1453,7 @@ window.reassignSelected = function(newGroup) {
 
 document.getElementById('ms-close').addEventListener('click', hideMeshPanel);
 
-// ── Set special material (glass / steel / restore standard) ──
+// ── Set special material (glass / steel / wood / restore standard) ──
 window.setMeshMaterial = function(type) {
   if (!selectedMesh) return;
 
@@ -1470,6 +1483,12 @@ window.setMeshMaterial = function(type) {
     selectedMesh.material = sm;
     selectedMesh.castShadow = true;
     matRegistry.set(sm.uuid, { mat: sm, meshObj: selectedMesh, group: 'none', matType: 'steel' });
+
+  } else if (type === 'wood') {
+    const wm = makeWoodMaterial();
+    selectedMesh.material = wm;
+    selectedMesh.castShadow = true;
+    matRegistry.set(wm.uuid, { mat: wm, meshObj: selectedMesh, group: 'none', matType: 'wood' });
 
   } else {
     // Восстановить оригинальный материал → можно красить
@@ -1699,6 +1718,7 @@ buildPicker({ gridId:'g-acc',  searchId:'s-acc',  swatchId:'acc-sw',
     <span class="cstat">Доп.: <b id="cs-acc">—</b></span>
     <span class="cstat">Стекло: <b id="cs-glass">—</b></span>
     <span class="cstat">Нержавейка: <b id="cs-steel">—</b></span>
+    <span class="cstat">Дерево: <b id="cs-wood">—</b></span>
     <span class="cstat">Не красить: <b id="cs-none">—</b></span>
     <button id="console-close" onclick="toggleConsole()">✕ Закрыть</button>
   </div>
@@ -1727,6 +1747,7 @@ buildPicker({ gridId:'g-acc',  searchId:'s-acc',  swatchId:'acc-sw',
       <div class="exp-stat"><span class="lbl">Доп. элементы (меши)</span><span class="val hi" id="es-acc">—</span></div>
       <div class="exp-stat"><span class="lbl">Стекло</span>             <span class="val"     id="es-glass">—</span></div>
       <div class="exp-stat"><span class="lbl">Нержавейка</span>         <span class="val"     id="es-steel">—</span></div>
+      <div class="exp-stat"><span class="lbl">Дерево</span>             <span class="val"     id="es-wood">—</span></div>
       <div class="exp-stat"><span class="lbl">Не красить</span>         <span class="val"     id="es-none">—</span></div>
       <div class="exp-stat"><span class="lbl">Цвет корпуса</span>       <span class="val"     id="es-bodyhex">—</span></div>
       <div class="exp-stat"><span class="lbl">Цвет доп.</span>          <span class="val"     id="es-acchex">—</span></div>
@@ -1762,10 +1783,11 @@ function toggleConsole() {
 
 function refreshConsole() {
   const mc = window._meshConfig;
-  let body=0, acc=0, glass=0, steel=0, none=0;
+  let body=0, acc=0, glass=0, steel=0, wood=0, none=0;
   mc.forEach(v => {
     if (v.matType==='glass')        glass++;
     else if (v.matType==='steel')   steel++;
+    else if (v.matType==='wood')    wood++;
     else if (v.group==='body')      body++;
     else if (v.group==='accent')    acc++;
     else                            none++;
@@ -1775,12 +1797,14 @@ function refreshConsole() {
   document.getElementById('cs-acc').textContent   = acc;
   document.getElementById('cs-glass').textContent = glass;
   document.getElementById('cs-steel').textContent = steel;
+  document.getElementById('cs-wood').textContent  = wood;
   document.getElementById('cs-none').textContent  = none;
   // Export stats
   document.getElementById('es-body').textContent  = body;
   document.getElementById('es-acc').textContent   = acc;
   document.getElementById('es-glass').textContent = glass;
   document.getElementById('es-steel').textContent = steel;
+  document.getElementById('es-wood').textContent  = wood;
   document.getElementById('es-none').textContent  = none;
   const gs = window._groupState || {};
   const co = window._centerOffset || { x: 0, y: 0, z: 0 };
@@ -1805,6 +1829,7 @@ function renderConsoleTable(filter) {
     {v:'standard', l:'Крашеный'},
     {v:'glass',    l:'Стекло'},
     {v:'steel',    l:'Нержавейка'},
+    {v:'wood',     l:'Дерево'},
   ];
 
   const entries = [...mc.entries()]
@@ -1840,6 +1865,7 @@ function renderConsoleTable(filter) {
       {v:'grp:none',      l:'→ Не красить'},
       {v:'mat:glass',     l:'→ Стекло'},
       {v:'mat:steel',     l:'→ Нержавейка'},
+      {v:'mat:wood',      l:'→ Дерево'},
       {v:'mat:standard',  l:'→ Крашеный'},
     ];
     actions.forEach(a => {
@@ -1876,11 +1902,12 @@ function renderConsoleTable(filter) {
 
 function buildConfigJSON() {
   const mc = window._meshConfig;
-  const cfg = { v:1, body:[], accent:[], glass:[], steel:[], skip:[] };
+  const cfg = { v:1, body:[], accent:[], glass:[], steel:[], wood:[], skip:[] };
   mc.forEach((v, name) => {
     if (!name) return;
     if (v.matType==='glass')       cfg.glass.push(name);
     else if (v.matType==='steel')  cfg.steel.push(name);
+    else if (v.matType==='wood')   cfg.wood.push(name);
     else if (v.group==='body')     cfg.body.push(name);
     else if (v.group==='accent')   cfg.accent.push(name);
     else                           cfg.skip.push(name);
