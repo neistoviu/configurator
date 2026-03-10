@@ -31,14 +31,9 @@
     "Body11_7",
     "Body1",
     "Body1_1",
-    "Body11_9",
-    "Body1_remesh",
-    "Disc",
-    "Volume_Mesher_remesh",
     "Body11_13",
     "Body11_14",
     "Body11_16",
-    "Body11_19",
     "Body12_0",
     "Body12_3",
     "Body12_4",
@@ -73,7 +68,12 @@
     "Body11_20",
     "Body11_21",
     "Body11_22",
-    "Volume_Mesher_remesh1"
+    "Volume_Mesher_remesh1",
+    "Body1_remesh",
+    "Disc",
+    "Body11_9",
+    "Body11_19",
+    "Volume_Mesher_remesh"
   ],
   "wood": [
     "handle_"
@@ -108,7 +108,7 @@
   "defaultAccentHex": "#BE3A34",
   "centerOffset": {
     "x": 0,
-    "y": 0.018,
+    "y": 0.017,
     "z": 0
   },
   "fixedColors": {
