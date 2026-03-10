@@ -289,7 +289,7 @@
         max-height: none;
         position: relative;
         overflow: visible;
-        padding-top: 52px;
+        padding-top: 40px;
       }
 
       .color-block {
@@ -334,7 +334,7 @@
 
       #offer-btn {
         position: absolute;
-        left: 50%; top: 8px;
+        left: 50%; top: -12px;
         transform: translateX(-50%);
         width: calc(100% - 24px); max-width: 360px; margin: 0;
         padding: 12px 0; font-size: 11px;
@@ -655,10 +655,10 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 // ── Model definitions ──
 const MODELS = {
-  '10pro': { file: 'new-roaster-3.glb', config: 'config-10pro.json', label: 'Typhoon 10 PRO', mobileDisplayScale: 0.9 },
+  '10pro': { file: 'new-roaster-3.glb', config: 'config-10pro.json', label: 'Typhoon 10 PRO', mobileDisplayScale: 0.95 },
   '2pro':  { file: 'new-roaster-1.glb', config: 'config-2pro.json', label: 'Typhoon 2.5 PRO' },
-  '5pro':  { file: 'new-roaster-2.glb', config: 'config-5pro.json', label: 'Typhoon 5 PRO', mobileDisplayScale: 0.9  },
-  'newroaster': { file: 'new-roaster-3.glb', config: 'config-10pro.json', label: 'Typhoon 10 PRO', mobileDisplayScale: 0.9 },
+  '5pro':  { file: 'new-roaster-2.glb', config: 'config-5pro.json', label: 'Typhoon 5 PRO', mobileDisplayScale: 0.95  },
+  'newroaster': { file: 'new-roaster-3.glb', config: 'config-10pro.json', label: 'Typhoon 10 PRO', mobileDisplayScale: 0.95 },
 };
 const pageParams = new URLSearchParams(window.location.search);
 const initialModel = MODELS[pageParams.get('model')] ? pageParams.get('model') : '10pro';
