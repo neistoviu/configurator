@@ -664,10 +664,9 @@
   <div class="logo-text">Typhoon <span>Roasters</span></div>
   <div class="header-tag" id="header-tag">Admin</div>
   <div class="admin-models">
-    <a class="admin-model-btn" data-model-file="1.glb" href="admin.html?model=1.glb&label=Typhoon%2010%20PRO">Typhoon 10 PRO</a>
+    <a class="admin-model-btn" data-model-file="new-roaster-3.glb" href="admin.html?model=new-roaster-3.glb&label=Typhoon%2010%20PRO">Typhoon 10 PRO</a>
     <a class="admin-model-btn" data-model-file="new-roaster-2.glb" href="admin.html?model=new-roaster-2.glb&label=Typhoon%205%20PRO">Typhoon 5 PRO</a>
     <a class="admin-model-btn" data-model-file="new-roaster-1.glb" href="admin.html?model=new-roaster-1.glb&label=Typhoon%202.5%20PRO">Typhoon 2.5 PRO</a>
-    <a class="admin-model-btn" data-model-file="new-roaster-3.glb" href="admin.html?model=new-roaster-3.glb&label=New%20Roaster">New Roaster</a>
   </div>
   <button id="console-btn" onclick="toggleConsole()">⚙ КОНСОЛЬ</button>
 </header>
@@ -1541,10 +1540,9 @@ function updateCounters() {
 
 // ── Load GLB ──
 const ADMIN_MODELS = [
-  { file: '1.glb', label: 'Typhoon 10 PRO' },
+  { file: 'new-roaster-3.glb', label: 'Typhoon 10 PRO' },
   { file: 'new-roaster-2.glb', label: 'Typhoon 5 PRO' },
   { file: 'new-roaster-1.glb', label: 'Typhoon 2.5 PRO' },
-  { file: 'new-roaster-3.glb', label: 'New Roaster' },
 ];
 const pageParams = new URLSearchParams(window.location.search);
 const modelFile = pageParams.get('model') || ADMIN_MODELS[0].file;
