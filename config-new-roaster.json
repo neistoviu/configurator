@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "body": [],
+  "accent": [],
+  "glass": [],
+  "steel": [],
+  "wood": [],
+  "skip": [],
+  "defaultBodyHex": null,
+  "defaultAccentHex": null,
+  "centerOffset": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+  },
+  "fixedColors": {}
+}

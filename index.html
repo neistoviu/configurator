@@ -503,12 +503,14 @@
     <button class="model-btn active" data-model="10pro">Typhoon 10 PRO</button>
     <button class="model-btn" data-model="5pro">Typhoon 5 PRO</button>
     <button class="model-btn" data-model="2pro">Typhoon 2.5 PRO</button>
+    <button class="model-btn" data-model="newroaster">New Roaster</button>
   </div>
 
   <select id="model-dropdown">
     <option value="10pro" selected>Typhoon 10 PRO</option>
     <option value="5pro">Typhoon 5 PRO</option>
     <option value="2pro">Typhoon 2.5 PRO</option>
+    <option value="newroaster">New Roaster</option>
   </select>
 
   <div class="header-right">Configurator</div>
@@ -655,6 +657,7 @@ const MODELS = {
   '10pro': { file: '1.glb',   config: 'config.json', label: 'Typhoon 10 PRO' },
   '2pro':  { file: 'new-roaster-1.glb', config: 'config-2pro.json', label: 'Typhoon 2.5 PRO' },
   '5pro':  { file: 'new-roaster-2.glb', config: 'config-5pro.json', label: 'Typhoon 5 PRO'  },
+  'newroaster': { file: 'new-roaster-3.glb', config: 'config-new-roaster.json', label: 'New Roaster' },
 };
 const pageParams = new URLSearchParams(window.location.search);
 const initialModel = MODELS[pageParams.get('model')] ? pageParams.get('model') : '10pro';
