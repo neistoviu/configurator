@@ -7,5 +7,10 @@
   "wood": [],
   "skip": [],
   "defaultBodyHex": null,
-  "defaultAccentHex": null
+  "defaultAccentHex": null,
+  "centerOffset": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+  }
 }

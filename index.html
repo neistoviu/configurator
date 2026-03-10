@@ -501,24 +501,14 @@
 
   <div class="model-selector">
     <button class="model-btn active" data-model="10pro">Typhoon 10 PRO</button>
-    <button class="model-btn" data-model="newroaster1">New Roaster 1</button>
-    <button class="model-btn" data-model="newroaster2">New Roaster 2</button>
-    <button class="model-btn disabled" data-model="5pro">
-      Typhoon 5 PRO
-      <span class="soon">coming soon</span>
-    </button>
-    <button class="model-btn disabled" data-model="2pro">
-      Typhoon 2.5 PRO
-      <span class="soon">coming soon</span>
-    </button>
+    <button class="model-btn" data-model="2pro">Typhoon 2.5 PRO</button>
+    <button class="model-btn" data-model="5pro">Typhoon 5 PRO</button>
   </div>
 
   <select id="model-dropdown">
     <option value="10pro" selected>Typhoon 10 PRO</option>
-    <option value="newroaster1">New Roaster 1</option>
-    <option value="newroaster2">New Roaster 2</option>
-    <option value="5pro" disabled>Typhoon 5 PRO — coming soon</option>
-    <option value="2pro" disabled>Typhoon 2.5 PRO — coming soon</option>
+    <option value="2pro">Typhoon 2.5 PRO</option>
+    <option value="5pro">Typhoon 5 PRO</option>
   </select>
 
   <div class="header-right">Configurator</div>
@@ -663,23 +653,45 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 // ── Model definitions ──
 const MODELS = {
   '10pro': { file: '1.glb',   config: 'config.json', label: 'Typhoon 10 PRO' },
-  'newroaster1': { file: 'new-roaster-1.glb', config: 'config-new-roaster-1.json', label: 'New Roaster 1' },
-  'newroaster2': { file: 'new-roaster-2.glb', config: 'config-new-roaster-2.json', label: 'New Roaster 2' },
-  '5pro':  { file: '5.glb',   config: 'config.json', label: 'Typhoon 5 PRO'  },
-  '2pro':  { file: '2.5.glb', config: 'config.json', label: 'Typhoon 2.5 PRO'},
+  '2pro':  { file: 'new-roaster-1.glb', config: 'config-2pro.json', label: 'Typhoon 2.5 PRO' },
+  '5pro':  { file: 'new-roaster-2.glb', config: 'config-5pro.json', label: 'Typhoon 5 PRO'  },
 };
 const pageParams = new URLSearchParams(window.location.search);
 const initialModel = MODELS[pageParams.get('model')] ? pageParams.get('model') : '10pro';
 let currentModel = initialModel;
 
 // ── Config ──
-let CFG = { body:[], accent:[], glass:[], steel:[], wood:[], skip:[],
-            defaultBodyHex: null, defaultAccentHex: null };
+function createDefaultConfig() {
+  return {
+    body: [],
+    accent: [],
+    glass: [],
+    steel: [],
+    wood: [],
+    skip: [],
+    defaultBodyHex: null,
+    defaultAccentHex: null,
+    centerOffset: { x: 0, y: 0, z: 0 },
+  };
+}
+
+let CFG = createDefaultConfig();
 
 async function loadConfig(url='config.json') {
+  CFG = createDefaultConfig();
   try {
     const r = await fetch(url);
-    if (r.ok) CFG = await r.json();
+    if (r.ok) {
+      const loaded = await r.json();
+      CFG = {
+        ...createDefaultConfig(),
+        ...loaded,
+        centerOffset: {
+          ...createDefaultConfig().centerOffset,
+          ...(loaded.centerOffset || {}),
+        },
+      };
+    }
   } catch(e) { console.warn('config.json not found — auto-detecting by colour'); }
 }
 
@@ -1086,12 +1098,21 @@ async function loadModel(modelKey) {
       const size   = box.getSize(new THREE.Vector3());
       const maxD   = Math.max(size.x, size.y, size.z);
 
-      // Translate model so its centre is at origin
-      model.position.sub(center);
+      const centerOffset = CFG.centerOffset || {};
+      const offsetX = Number(centerOffset.x) || 0;
+      const offsetY = Number(centerOffset.y) || 0;
+      const offsetZ = Number(centerOffset.z) || 0;
+
+      // Translate model so its effective rotation centre is at origin
+      model.position.set(
+        -center.x + offsetX,
+        -center.y + offsetY,
+        -center.z + offsetZ
+      );
 
       // Place ground at model bottom
-      ground.position.y     = -size.y * 0.5;
-      gridHelper.position.y = -size.y * 0.5 + 0.02;
+      ground.position.y     = -size.y * 0.5 + offsetY;
+      gridHelper.position.y = -size.y * 0.5 + offsetY + 0.02;
 
       if (isMobile) {
         camera.position.set(0, -maxD * 0.02, maxD * 2.15);

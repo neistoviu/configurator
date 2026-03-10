@@ -59,6 +59,35 @@
       border: 1px solid var(--border);
       padding: 3px 10px; border-radius: 20px;
     }
+    .admin-models {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 14px;
+    }
+    .admin-model-btn {
+      text-decoration: none;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      background: #17181b;
+      padding: 6px 10px;
+      border-radius: 16px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .admin-model-btn:hover {
+      color: var(--text);
+      border-color: #3a3b42;
+      background: #1d1f23;
+    }
+    .admin-model-btn.active {
+      color: #121212;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
 
     /* ── Layout ── */
     .main { display: flex; flex: 1; overflow: hidden; }
@@ -132,6 +161,75 @@
     }
     .search::placeholder { color: #3a3a40; }
     .search:focus { border-color: #45454e; }
+
+    .axis-panel {
+      background: #1f2024;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .axis-help {
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .axis-row {
+      display: grid;
+      grid-template-columns: 18px 26px minmax(0, 1fr) 26px 74px;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .axis-row:last-child { margin-bottom: 0; }
+    .axis-tag {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .axis-slider {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .axis-input {
+      width: 100%;
+      background: #16171a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      padding: 6px 8px;
+      outline: none;
+    }
+    .axis-btn, .axis-reset {
+      border: 1px solid var(--border);
+      background: #18191c;
+      color: var(--text);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .axis-btn {
+      width: 26px;
+      height: 26px;
+      font-size: 14px;
+      line-height: 1;
+    }
+    .axis-reset {
+      padding: 7px 10px;
+      font-size: 11px;
+    }
+    .axis-btn:hover, .axis-reset:hover {
+      background: #22242a;
+      border-color: #373943;
+    }
+    .axis-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
 
     .ral-grid {
       display: grid;
@@ -553,7 +651,7 @@
 
 <!-- Loading -->
 <div id="loading">
-  <div class="load-logo">Typhoon <span>Configurator</span></div>
+  <div class="load-logo" id="load-logo">Typhoon <span>Configurator</span></div>
   <div class="prog-wrap"><div class="prog-fill" id="prog"></div></div>
   <div class="load-pct" id="load-txt">Загрузка модели…</div>
 </div>
@@ -562,7 +660,12 @@
 <header>
   <div class="logo-mark">T</div>
   <div class="logo-text">Typhoon <span>Roasters</span></div>
-  <div class="header-tag">Admin</div>
+  <div class="header-tag" id="header-tag">Admin</div>
+  <div class="admin-models">
+    <a class="admin-model-btn" data-model-file="1.glb" href="admin.html?model=1.glb&label=Typhoon%2010%20PRO">Typhoon 10 PRO</a>
+    <a class="admin-model-btn" data-model-file="new-roaster-1.glb" href="admin.html?model=new-roaster-1.glb&label=Typhoon%202.5%20PRO">Typhoon 2.5 PRO</a>
+    <a class="admin-model-btn" data-model-file="new-roaster-2.glb" href="admin.html?model=new-roaster-2.glb&label=Typhoon%205%20PRO">Typhoon 5 PRO</a>
+  </div>
   <button id="console-btn" onclick="toggleConsole()">⚙ КОНСОЛЬ</button>
 </header>
 
@@ -652,6 +755,41 @@
         </div>
         <input class="search" id="s-acc" type="text" placeholder="Поиск RAL или названия…">
         <div class="ral-grid" id="g-acc"></div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="color-section">
+        <div class="section-label">Центр вращения</div>
+        <div class="axis-panel">
+          <div class="axis-help">
+            Сдвигай модель относительно pivot, если объект вращается не вокруг правильного центра.
+          </div>
+          <div class="axis-row">
+            <div class="axis-tag">X</div>
+            <button class="axis-btn" type="button" data-axis="x" data-dir="-1">-</button>
+            <input class="axis-slider" id="center-x-slider" type="range" min="-1" max="1" step="0.01" value="0">
+            <button class="axis-btn" type="button" data-axis="x" data-dir="1">+</button>
+            <input class="axis-input" id="center-x-input" type="number" step="0.01" value="0">
+          </div>
+          <div class="axis-row">
+            <div class="axis-tag">Y</div>
+            <button class="axis-btn" type="button" data-axis="y" data-dir="-1">-</button>
+            <input class="axis-slider" id="center-y-slider" type="range" min="-1" max="1" step="0.01" value="0">
+            <button class="axis-btn" type="button" data-axis="y" data-dir="1">+</button>
+            <input class="axis-input" id="center-y-input" type="number" step="0.01" value="0">
+          </div>
+          <div class="axis-row">
+            <div class="axis-tag">Z</div>
+            <button class="axis-btn" type="button" data-axis="z" data-dir="-1">-</button>
+            <input class="axis-slider" id="center-z-slider" type="range" min="-1" max="1" step="0.01" value="0">
+            <button class="axis-btn" type="button" data-axis="z" data-dir="1">+</button>
+            <input class="axis-input" id="center-z-input" type="number" step="0.01" value="0">
+          </div>
+          <div class="axis-actions">
+            <button class="axis-reset" type="button" id="center-reset">Сбросить центр</button>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -1053,6 +1191,15 @@ const groupState = {
 };
 window._groupState = groupState;
 
+const centerOffset = { x: 0, y: 0, z: 0 };
+const modelBounds = {
+  center: new THREE.Vector3(),
+  size: new THREE.Vector3(),
+  maxD: 1,
+};
+let activeModelRoot = null;
+window._centerOffset = centerOffset;
+
 function applyGroupSettings(group) {
   const s   = groupState[group];
   const mats = group === 'body' ? bodyMats : accentMats;
@@ -1078,6 +1225,93 @@ let selectedMesh = null;
 
 // Store original emissive to restore after de-selection
 const origEmissive = new Map(); // mesh.uuid → [{r,g,b,i}, ...]
+
+function getCenterControlRange() {
+  const manual = Math.max(
+    Math.abs(centerOffset.x),
+    Math.abs(centerOffset.y),
+    Math.abs(centerOffset.z),
+  );
+  return Math.max(0.25, modelBounds.maxD * 0.75, manual + 0.05);
+}
+
+function getCenterControlStep() {
+  return Math.max(0.005, Number((modelBounds.maxD / 250).toFixed(3)));
+}
+
+function updateCenterControlRanges() {
+  const range = getCenterControlRange();
+  const step = getCenterControlStep();
+  ['x', 'y', 'z'].forEach(axis => {
+    const slider = document.getElementById(`center-${axis}-slider`);
+    const input = document.getElementById(`center-${axis}-input`);
+    slider.min = String(-range);
+    slider.max = String(range);
+    slider.step = String(step);
+    input.step = String(step);
+  });
+}
+
+function syncCenterControls() {
+  ['x', 'y', 'z'].forEach(axis => {
+    const slider = document.getElementById(`center-${axis}-slider`);
+    const input = document.getElementById(`center-${axis}-input`);
+    slider.value = String(centerOffset[axis]);
+    input.value = centerOffset[axis].toFixed(3);
+  });
+}
+
+function applyCenterOffset() {
+  if (!activeModelRoot) return;
+  activeModelRoot.position.set(
+    -modelBounds.center.x + centerOffset.x,
+    -modelBounds.center.y + modelBounds.size.y * 0.5 + centerOffset.y,
+    -modelBounds.center.z + centerOffset.z
+  );
+}
+
+function setCenterOffset(axis, value) {
+  const next = Number(value);
+  centerOffset[axis] = Number.isFinite(next) ? next : 0;
+  updateCenterControlRanges();
+  applyCenterOffset();
+  syncCenterControls();
+  if (window.refreshConsole) window.refreshConsole();
+}
+
+function resetCenterOffset() {
+  centerOffset.x = 0;
+  centerOffset.y = 0;
+  centerOffset.z = 0;
+  updateCenterControlRanges();
+  applyCenterOffset();
+  syncCenterControls();
+  if (window.refreshConsole) window.refreshConsole();
+}
+
+function initCenterControls() {
+  ['x', 'y', 'z'].forEach(axis => {
+    const slider = document.getElementById(`center-${axis}-slider`);
+    const input = document.getElementById(`center-${axis}-input`);
+    slider.addEventListener('input', () => setCenterOffset(axis, slider.value));
+    input.addEventListener('input', () => setCenterOffset(axis, input.value));
+    input.addEventListener('change', () => setCenterOffset(axis, input.value));
+  });
+
+  document.querySelectorAll('.axis-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const axis = btn.dataset.axis;
+      const dir = Number(btn.dataset.dir) || 0;
+      setCenterOffset(axis, centerOffset[axis] + dir * getCenterControlStep());
+    });
+  });
+
+  document.getElementById('center-reset').addEventListener('click', resetCenterOffset);
+  updateCenterControlRanges();
+  syncCenterControls();
+}
+
+initCenterControls();
 
 function setMeshHighlight(mesh, on) {
   if (!mesh) return;
@@ -1286,15 +1520,34 @@ function updateCounters() {
 }
 
 // ── Load GLB ──
+const ADMIN_MODELS = [
+  { file: '1.glb', label: 'Typhoon 10 PRO' },
+  { file: 'new-roaster-1.glb', label: 'Typhoon 2.5 PRO' },
+  { file: 'new-roaster-2.glb', label: 'Typhoon 5 PRO' },
+];
+const pageParams = new URLSearchParams(window.location.search);
+const modelFile = pageParams.get('model') || ADMIN_MODELS[0].file;
+const activeModelMeta = ADMIN_MODELS.find(model => model.file === modelFile);
+const modelLabel = pageParams.get('label') || activeModelMeta?.label || modelFile.replace(/\.glb$/i, '');
+
+document.title = `Typhoon Configurator — ${modelLabel}`;
+document.getElementById('header-tag').textContent = modelLabel;
+document.getElementById('load-logo').innerHTML = `Typhoon <span>${modelLabel}</span>`;
+document.getElementById('load-txt').textContent = `Загрузка модели ${modelLabel}…`;
+document.querySelectorAll('.admin-model-btn').forEach(btn => {
+  btn.classList.toggle('active', btn.dataset.modelFile === modelFile);
+});
+
 const draco = new DRACOLoader();
 draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/libs/draco/');
 const loader = new GLTFLoader();
 loader.setDRACOLoader(draco);
 
-loader.load('1.glb',
+loader.load(modelFile,
   gltf => {
     const model = gltf.scene;
     pivot.add(model);
+    activeModelRoot = model;
 
     const names = new Set();
 
@@ -1350,8 +1603,10 @@ loader.load('1.glb',
     const center = box.getCenter(new THREE.Vector3());
     const size   = box.getSize(new THREE.Vector3());
     const maxD   = Math.max(size.x, size.y, size.z);
-    model.position.sub(center);
-    model.position.y += size.y * 0.5;
+    modelBounds.center.copy(center);
+    modelBounds.size.copy(size);
+    modelBounds.maxD = maxD;
+    resetCenterOffset();
     ground.position.y     = 0;
     gridHelper.position.y = 0.01;
     camera.position.set(0, maxD * 0.25, maxD * 1.9);
@@ -1475,6 +1730,7 @@ buildPicker({ gridId:'g-acc',  searchId:'s-acc',  swatchId:'acc-sw',
       <div class="exp-stat"><span class="lbl">Не красить</span>         <span class="val"     id="es-none">—</span></div>
       <div class="exp-stat"><span class="lbl">Цвет корпуса</span>       <span class="val"     id="es-bodyhex">—</span></div>
       <div class="exp-stat"><span class="lbl">Цвет доп.</span>          <span class="val"     id="es-acchex">—</span></div>
+      <div class="exp-stat"><span class="lbl">Сдвиг центра</span>       <span class="val"     id="es-center">X 0.000 Y 0.000 Z 0.000</span></div>
 
       <button id="exp-btn" onclick="downloadConfig()">⬇ Скачать config.json</button>
       <button id="copy-btn" onclick="copyConfig()">⎘ Скопировать JSON</button>
@@ -1527,8 +1783,11 @@ function refreshConsole() {
   document.getElementById('es-steel').textContent = steel;
   document.getElementById('es-none').textContent  = none;
   const gs = window._groupState || {};
+  const co = window._centerOffset || { x: 0, y: 0, z: 0 };
   document.getElementById('es-bodyhex').textContent = gs.body?.hex  || '—';
   document.getElementById('es-acchex').textContent  = gs.accent?.hex || '—';
+  document.getElementById('es-center').textContent =
+    `X ${Number(co.x || 0).toFixed(3)} Y ${Number(co.y || 0).toFixed(3)} Z ${Number(co.z || 0).toFixed(3)}`;
 }
 
 function renderConsoleTable(filter) {
@@ -1627,8 +1886,14 @@ function buildConfigJSON() {
     else                           cfg.skip.push(name);
   });
   const gs = window._groupState || {};
+  const co = window._centerOffset || { x: 0, y: 0, z: 0 };
   cfg.defaultBodyHex   = gs.body?.hex   || null;
   cfg.defaultAccentHex = gs.accent?.hex || null;
+  cfg.centerOffset = {
+    x: Number(co.x || 0),
+    y: Number(co.y || 0),
+    z: Number(co.z || 0),
+  };
   return cfg;
 }
 
