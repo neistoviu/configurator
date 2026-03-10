@@ -287,9 +287,6 @@
         border-left: none; border-top: 1px solid var(--border);
         flex-direction: column;
         max-height: none;
-        position: relative;
-        overflow: visible;
-        padding-top: 40px;
       }
 
       .color-block {
@@ -333,13 +330,10 @@
       .sw:hover { transform: none; }
 
       #offer-btn {
-        position: absolute;
-        left: 50%; top: -12px;
-        transform: translateX(-50%);
-        width: calc(100% - 24px); max-width: 360px; margin: 0;
+        order: -1;
+        width: calc(100% - 24px); margin: 10px 12px 4px;
         padding: 12px 0; font-size: 11px;
         border-radius: 10px;
-        z-index: 12;
       }
 
       .modal { padding: 24px 20px 20px; }
