@@ -501,6 +501,7 @@
 
   <div class="model-selector">
     <button class="model-btn active" data-model="10pro">Typhoon 10 PRO</button>
+    <button class="model-btn" data-model="newroaster1">New Roaster 1</button>
     <button class="model-btn disabled" data-model="5pro">
       Typhoon 5 PRO
       <span class="soon">coming soon</span>
@@ -513,6 +514,7 @@
 
   <select id="model-dropdown">
     <option value="10pro" selected>Typhoon 10 PRO</option>
+    <option value="newroaster1">New Roaster 1</option>
     <option value="5pro" disabled>Typhoon 5 PRO — coming soon</option>
     <option value="2pro" disabled>Typhoon 2.5 PRO — coming soon</option>
   </select>
@@ -534,7 +536,7 @@
       <!-- Info strip: below canvas on desktop, overlaid on mobile -->
       <div id="info-strip">
         <p class="info-text">
-          Compared to a drum roaster, savings with the Typhoon 10 PRO are about
+          Compared to a drum roaster, savings with a Typhoon roaster are about
           <span class="n-total">€5,572 per month</span> at the same utilisation<span class="mob-hide">:
           labour — <span class="n-labour">€1,594</span>;
           electricity — <span class="n-elec">€731</span>;
@@ -659,10 +661,13 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 // ── Model definitions ──
 const MODELS = {
   '10pro': { file: '1.glb',   config: 'config.json', label: 'Typhoon 10 PRO' },
+  'newroaster1': { file: 'new-roaster.glb', config: 'config.json', label: 'New Roaster 1' },
   '5pro':  { file: '5.glb',   config: 'config.json', label: 'Typhoon 5 PRO'  },
   '2pro':  { file: '2.5.glb', config: 'config.json', label: 'Typhoon 2.5 PRO'},
 };
-let currentModel = '10pro';
+const pageParams = new URLSearchParams(window.location.search);
+const initialModel = MODELS[pageParams.get('model')] ? pageParams.get('model') : '10pro';
+let currentModel = initialModel;
 
 // ── Config ──
 let CFG = { body:[], accent:[], glass:[], steel:[], wood:[], skip:[],
@@ -1004,6 +1009,8 @@ loader.setDRACOLoader(draco);
 async function loadModel(modelKey) {
   const def = MODELS[modelKey];
   currentModel = modelKey;
+  syncModelSelectors(modelKey);
+  updateModelUrl(modelKey);
 
   // Reset materials
   bodyMats = []; accentMats = [];
@@ -1107,18 +1114,34 @@ async function loadModel(modelKey) {
   );
 }
 
+function syncModelSelectors(modelKey) {
+  document.querySelectorAll('.model-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.model === modelKey);
+  });
+  const dropdown = document.getElementById('model-dropdown');
+  if (dropdown) dropdown.value = modelKey;
+}
+
+function updateModelUrl(modelKey) {
+  const url = new URL(window.location.href);
+  if (modelKey === '10pro') {
+    url.searchParams.delete('model');
+  } else {
+    url.searchParams.set('model', modelKey);
+  }
+  window.history.replaceState({}, '', url);
+}
+
 // ── Model selector buttons ──
 document.querySelectorAll('.model-btn:not(.disabled)').forEach(btn => {
   btn.addEventListener('click', () => {
     if (btn.dataset.model === currentModel) return;
-    document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
     loadModel(btn.dataset.model);
   });
 });
 
 // Initial load
-loadModel('10pro');
+loadModel(initialModel);
 
 // ── Render loop ──
 (function loop() {
@@ -1166,9 +1189,6 @@ const modelDropdown = document.getElementById('model-dropdown');
 modelDropdown.addEventListener('change', () => {
   const val = modelDropdown.value;
   if (val === currentModel) return;
-  document.querySelectorAll('.model-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.model === val);
-  });
   loadModel(val);
 });
 
