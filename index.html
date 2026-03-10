@@ -527,7 +527,7 @@
       </div>
       <!-- Info strip: below canvas on desktop, overlaid on mobile -->
       <div id="info-strip">
-        <p class="info-text">
+        <p class="info-text" id="info-text">
           Compared to a drum roaster, savings with a Typhoon roaster are about
           <span class="n-total">€5,572 per month</span> at the same utilisation<span class="mob-hide">:
           labour — <span class="n-labour">€1,594</span>;
@@ -659,6 +659,17 @@ const MODELS = {
 const pageParams = new URLSearchParams(window.location.search);
 const initialModel = MODELS[pageParams.get('model')] ? pageParams.get('model') : '10pro';
 let currentModel = initialModel;
+
+const DEFAULT_INFO_HTML = `Compared to a drum roaster, savings with a Typhoon roaster are about
+          <span class="n-total">€5,572 per month</span> at the same utilisation<span class="mob-hide">:
+          labour — <span class="n-labour">€1,594</span>;
+          electricity — <span class="n-elec">€731</span>;
+          reduced defects — <span class="n-defect">€3,247</span>.
+          At 50% utilisation, payback is approximately <span class="n-pay">2 months</span></span>.`;
+
+const MODEL_INFO_HTML = {
+  '5pro': `With Typhoon 5 PRO, you save about <span class="n-total">€3,583 per month</span>. Breakdown: labor — <span class="n-labour">€1,594</span>, electricity — <span class="n-elec">€365</span>, reduced defects — <span class="n-defect">€1,624</span>. Payback at 50% utilization is around <span class="n-pay">2.5 months</span>.`,
+};
 
 // ── Config ──
 function createDefaultConfig() {
@@ -1031,6 +1042,7 @@ async function loadModel(modelKey) {
   currentModel = modelKey;
   syncModelSelectors(modelKey);
   updateModelUrl(modelKey);
+  updateInfoStrip(modelKey);
 
   // Reset materials
   bodyMats = []; accentMats = [];
@@ -1152,6 +1164,12 @@ async function loadModel(modelKey) {
       console.error(err);
     }
   );
+}
+
+function updateInfoStrip(modelKey) {
+  const infoText = document.getElementById('info-text');
+  if (!infoText) return;
+  infoText.innerHTML = MODEL_INFO_HTML[modelKey] || DEFAULT_INFO_HTML;
 }
 
 function syncModelSelectors(modelKey) {
