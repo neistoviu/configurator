@@ -129,6 +129,15 @@
       background: #1a1b20; border: 1px solid var(--border);
       border-radius: 8px; padding: 9px 12px; margin-bottom: 10px;
     }
+    .sel-tag {
+      display: none;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
     .sel-swatch {
       width: 34px; height: 34px; border-radius: 5px;
       border: 1.5px solid rgba(255,255,255,0.1);
@@ -250,13 +259,13 @@
         display: block; margin-left: auto;
         background: var(--accent); color: #fff;
         border: none;
-        border-radius: 20px; padding: 7px 30px 7px 14px;
-        font-size: 10px; font-weight: 700;
+        border-radius: 22px; padding: 9px 34px 9px 16px;
+        font-size: 11px; font-weight: 700;
         letter-spacing: 0.06em; text-transform: uppercase;
         -webkit-appearance: none; appearance: none;
         background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l4 5 4-5z' fill='white'/%3E%3C/svg%3E");
         background-repeat: no-repeat;
-        background-position: right 12px center;
+        background-position: right 14px center;
         cursor: pointer; outline: none;
         box-shadow: 0 2px 12px var(--accent-glow);
       }
@@ -280,6 +289,7 @@
         max-height: none;
         position: relative;
         overflow: visible;
+        padding-top: 52px;
       }
 
       .color-block {
@@ -293,17 +303,14 @@
         gap: 8px; margin-bottom: 0;
       }
 
-      .section-label {
-        position: static; background: none;
-        padding: 0; margin-bottom: 0;
-        font-size: 8px; white-space: nowrap;
-        flex-shrink: 0; min-width: 46px;
-      }
+      .section-label { display: none; }
 
       .selected-row {
-        flex-shrink: 0; padding: 4px 8px; margin-bottom: 0;
-        border-radius: 6px; gap: 6px;
+        flex-shrink: 0; padding: 5px 9px; margin-bottom: 0;
+        border-radius: 6px; gap: 7px;
+        min-width: 118px;
       }
+      .sel-tag { display: block; }
       .sel-swatch { width: 28px; height: 28px; border-radius: 4px; }
       .sel-info .ral-code { font-size: 10px; }
       .sel-info .ral-name { display: none; }
@@ -327,8 +334,9 @@
 
       #offer-btn {
         position: absolute;
-        left: 12px; right: 12px; top: -56px;
-        width: auto; margin: 0;
+        left: 50%; top: 8px;
+        transform: translateX(-50%);
+        width: calc(100% - 24px); max-width: 360px; margin: 0;
         padding: 12px 0; font-size: 11px;
         border-radius: 10px;
         z-index: 12;
@@ -537,6 +545,7 @@
       <div class="color-section">
         <div class="section-label">Body Color</div>
         <div class="selected-row">
+          <div class="sel-tag">Body</div>
           <div class="sel-swatch" id="body-sw"></div>
           <div class="sel-info">
             <div class="ral-code" id="body-code">—</div>
@@ -552,6 +561,7 @@
       <div class="color-section">
         <div class="section-label">Accent Color</div>
         <div class="selected-row">
+          <div class="sel-tag">Accent</div>
           <div class="sel-swatch" id="acc-sw"></div>
           <div class="sel-info">
             <div class="ral-code" id="acc-code">—</div>
@@ -645,10 +655,10 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 // ── Model definitions ──
 const MODELS = {
-  '10pro': { file: 'new-roaster-3.glb', config: 'config-10pro.json', label: 'Typhoon 10 PRO' },
+  '10pro': { file: 'new-roaster-3.glb', config: 'config-10pro.json', label: 'Typhoon 10 PRO', mobileDisplayScale: 0.9 },
   '2pro':  { file: 'new-roaster-1.glb', config: 'config-2pro.json', label: 'Typhoon 2.5 PRO' },
-  '5pro':  { file: 'new-roaster-2.glb', config: 'config-5pro.json', label: 'Typhoon 5 PRO'  },
-  'newroaster': { file: 'new-roaster-3.glb', config: 'config-10pro.json', label: 'Typhoon 10 PRO' },
+  '5pro':  { file: 'new-roaster-2.glb', config: 'config-5pro.json', label: 'Typhoon 5 PRO', mobileDisplayScale: 0.9  },
+  'newroaster': { file: 'new-roaster-3.glb', config: 'config-10pro.json', label: 'Typhoon 10 PRO', mobileDisplayScale: 0.9 },
 };
 const pageParams = new URLSearchParams(window.location.search);
 const initialModel = MODELS[pageParams.get('model')] ? pageParams.get('model') : '10pro';
@@ -1174,9 +1184,13 @@ async function loadModel(modelKey) {
         -center.z + offsetZ
       );
 
+      const mobileDisplayScale = isMobile ? (def.mobileDisplayScale || 1) : 1;
+      model.scale.setScalar(mobileDisplayScale);
+
       // Place ground at model bottom
-      ground.position.y     = -size.y * 0.5 + offsetY;
-      gridHelper.position.y = -size.y * 0.5 + offsetY + 0.02;
+      const finalBox = new THREE.Box3().setFromObject(model);
+      ground.position.y     = finalBox.min.y;
+      gridHelper.position.y = finalBox.min.y + 0.02;
 
       if (isMobile) {
         camera.position.set(0, -maxD * 0.02, maxD * 2.15);
