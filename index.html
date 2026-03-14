@@ -291,34 +291,33 @@
 
       .color-block {
         flex: none; overflow-x: hidden; overflow-y: hidden;
-        padding: 8px 12px; min-height: 0;
+        padding: 5px 12px; min-height: 0;
       }
       .color-block + .color-block { border-top: 1px solid var(--border); }
 
       .color-section {
-        display: flex; align-items: center;
-        gap: 8px; margin-bottom: 0;
+        display: flex; flex-direction: column;
+        gap: 4px; margin-bottom: 0;
       }
 
       .section-label { display: none; }
 
       .selected-row {
-        flex-shrink: 0; padding: 5px 9px; margin-bottom: 0;
-        border-radius: 6px; gap: 7px;
-        min-width: 118px;
+        flex-shrink: 0; padding: 3px 8px; margin-bottom: 0;
+        border-radius: 5px; gap: 6px;
       }
       .sel-tag { display: block; }
-      .sel-swatch { width: 28px; height: 28px; border-radius: 4px; }
-      .sel-info .ral-code { font-size: 10px; }
+      .sel-swatch { width: 20px; height: 20px; border-radius: 3px; }
+      .sel-info .ral-code { font-size: 9px; }
       .sel-info .ral-name { display: none; }
 
       .search { display: none; }
 
       .ral-grid {
-        display: flex; flex-wrap: nowrap; gap: 5px;
+        display: flex; flex-wrap: nowrap; gap: 4px;
         overflow-x: auto; overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
-        padding-bottom: 3px; flex: 1; min-width: 0;
+        padding-bottom: 2px; width: 100%; min-width: 0;
       }
       .ral-grid::-webkit-scrollbar { height: 3px; }
       .ral-grid::-webkit-scrollbar-thumb { background: #3a3a48; border-radius: 2px; }
