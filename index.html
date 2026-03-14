@@ -912,11 +912,11 @@ function makeGlassMaterial() {
 }
 function makeFrostedGlassMaterial() {
   return new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(0.18, 0.20, 0.24),
-    transmission: 0.0, transparent: true, opacity: 0.88,
-    roughness: 0.15, metalness: 0.6, ior: 2.0,
-    reflectivity: 1.0, clearcoat: 1.0, clearcoatRoughness: 0.05,
-    envMapIntensity: 1.2, side: THREE.DoubleSide, depthWrite: false,
+    color: new THREE.Color(0.12, 0.14, 0.18),
+    transmission: 0.0, transparent: true, opacity: 0.35,
+    roughness: 0.12, metalness: 0.7, ior: 2.2,
+    reflectivity: 1.0, clearcoat: 1.0, clearcoatRoughness: 0.03,
+    envMapIntensity: 1.5, side: THREE.DoubleSide, depthWrite: false,
   });
 }
 function makeImageGlassMaterial(url) {
