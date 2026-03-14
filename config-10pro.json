@@ -558,6 +558,6 @@
     "y": 0,
     "z": 0
   },
-  "initialRotationY": 90,
+  "initialRotationY": 180,
   "fixedColors": {}
 }
