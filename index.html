@@ -514,8 +514,8 @@
     <div id="canvas-wrap">
       <div id="bottom-bar">
         <span class="bar-label">Light</span>
-        <input type="range" id="light-slider" min="0" max="100" value="12" step="1">
-        <span class="bar-val" id="light-pct">12%</span>
+        <input type="range" id="light-slider" min="0" max="100" value="39" step="1">
+        <span class="bar-val" id="light-pct">39%</span>
         <div class="bar-sep"></div>
         <span class="bar-label">Rotate</span>
         <button id="play-btn" class="playing">⏸</button>
@@ -1010,11 +1010,7 @@ const gridHelper = new THREE.GridHelper(14, 28, 0x22242a, 0x1a1c20); scene.add(g
 // Light slider (0–100%)
 const lightSlider = document.getElementById('light-slider');
 const lightPct    = document.getElementById('light-pct');
-if (isMobile) {
-  lightSlider.value = 34;
-  lightPct.textContent = '34%';
-  lightRig.rotation.y = THREE.MathUtils.degToRad(34 * 3.6);
-}
+lightRig.rotation.y = THREE.MathUtils.degToRad(39 * 3.6);
 lightSlider.addEventListener('input', e => {
   const pct = Number(e.target.value);
   lightRig.rotation.y = THREE.MathUtils.degToRad(pct * 3.6);
