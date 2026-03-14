@@ -912,11 +912,11 @@ function makeGlassMaterial() {
 }
 function makeFrostedGlassMaterial() {
   return new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(0.12, 0.14, 0.18),
-    transmission: 0.0, transparent: true, opacity: 0.35,
-    roughness: 0.12, metalness: 0.7, ior: 2.2,
-    reflectivity: 1.0, clearcoat: 1.0, clearcoatRoughness: 0.03,
-    envMapIntensity: 1.5, side: THREE.DoubleSide, depthWrite: false,
+    color: new THREE.Color(0.10, 0.12, 0.16),
+    transmission: 0.0, transparent: true, opacity: 0.55,
+    roughness: 0.08, metalness: 0.8, ior: 2.4,
+    reflectivity: 1.0, clearcoat: 1.0, clearcoatRoughness: 0.02,
+    envMapIntensity: 2.0, side: THREE.DoubleSide, depthWrite: false,
   });
 }
 function makeImageGlassMaterial(url) {
@@ -1087,8 +1087,9 @@ async function loadModel(modelKey) {
   bodyMats = []; accentMats = [];
   groupState.body.hex = null; groupState.accent.hex = null;
 
-  // Clear existing model from pivot
+  // Clear existing model from pivot and reset rotation
   while(pivot.children.length) pivot.remove(pivot.children[0]);
+  pivot.rotation.set(0, 0, 0);
 
   // Update loading screen
   document.getElementById('load-model-name').textContent = def.label;
