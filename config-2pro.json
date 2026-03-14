@@ -145,9 +145,8 @@
   "defaultBodyHex": null,
   "defaultAccentHex": "#E1A6AD",
   "centerOffset": {
-    "x": -0.105,
+    "x": 0.045,
     "y": 0.008,
     "z": 0.000
-  },
-  "initialRotationY": 15
+  }
 }
