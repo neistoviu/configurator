@@ -216,6 +216,14 @@
     #play-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
     #play-btn.playing { border-color: var(--accent); color: var(--accent); }
 
+    .color-disclaimer {
+      position: absolute; bottom: 62px; left: 0; right: 0;
+      text-align: center; pointer-events: none;
+      font-size: 10px; font-style: italic;
+      color: rgba(255,255,255,0.18);
+      letter-spacing: 0.02em;
+    }
+
     /* ── Canvas column ── */
     #canvas-col {
       flex: 1; display: flex; flex-direction: column; overflow: hidden;
@@ -519,6 +527,7 @@
         <span class="bar-label">Rotate</span>
         <button id="play-btn" class="playing">⏸</button>
       </div>
+      <div class="color-disclaimer">*The colors of the roaster on the screen may differ from the actual paint job</div>
       <!-- Info strip: below canvas on desktop, overlaid on mobile -->
       <div id="info-strip">
         <p class="info-text" id="info-text">
