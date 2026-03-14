@@ -881,8 +881,8 @@ const RAL = [
 ];
 
 // ── Helpers ──
+const FROSTED_GLASS_MESHES = ['ALL1_22', 'Body11_2', 'ALL1_17'];
 const IMAGE_GLASS_MESHES = {
-  'ALL1_22': 'glass-reflection-cafe.png',
 };
 const glassTextureLoader = new THREE.TextureLoader();
 const glassTextureCache = new Map();
@@ -908,6 +908,16 @@ function makeGlassMaterial() {
     attenuationColor: new THREE.Color(0.8, 0.95, 1.0),
     attenuationDistance: 16,
     envMapIntensity: 0.02, side: THREE.DoubleSide, depthWrite: false,
+  });
+}
+function makeFrostedGlassMaterial() {
+  return new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color(0.92, 0.95, 0.98),
+    transmission: 0.55, transparent: true, opacity: 0.92,
+    roughness: 0.85, metalness: 0.0, ior: 1.45, thickness: 3.0,
+    attenuationColor: new THREE.Color(0.85, 0.90, 0.95),
+    attenuationDistance: 4,
+    envMapIntensity: 0.15, side: THREE.DoubleSide, depthWrite: false,
   });
 }
 function makeImageGlassMaterial(url) {
@@ -1111,6 +1121,10 @@ async function loadModel(modelKey) {
         if (!obj.isMesh) return;
         obj.castShadow=true; obj.receiveShadow=true;
 
+        if (FROSTED_GLASS_MESHES.includes(obj.name)) {
+          obj.material = makeFrostedGlassMaterial();
+          obj.castShadow = false; return;
+        }
         const imageGlassUrl = IMAGE_GLASS_MESHES[obj.name];
         if (imageGlassUrl) {
           obj.material = makeImageGlassMaterial(imageGlassUrl);
