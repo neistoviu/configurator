@@ -1204,6 +1204,9 @@ async function loadModel(modelKey) {
         camera.lookAt(0, -maxD * 0.14, 0);
       }
 
+      const initRotY = CFG.initialRotationY || 0;
+      pivot.rotation.y = THREE.MathUtils.degToRad(initRotY);
+
       ld.classList.add('fade');
       setTimeout(() => { ld.style.display='none'; }, 450);
     },
