@@ -1086,9 +1086,14 @@ async function loadModel(modelKey) {
   bodyMats = []; accentMats = [];
   groupState.body.hex = null; groupState.accent.hex = null;
 
-  // Clear existing model from pivot and reset rotation
+  // Stop auto-spin during load to prevent drift
+  autoSpin = false;
+
+  // Clear existing model from pivot and reset transform
   while(pivot.children.length) pivot.remove(pivot.children[0]);
   pivot.rotation.set(0, 0, 0);
+  pivot.position.set(0, 0, 0);
+  pivot.scale.set(1, 1, 1);
 
   // Update loading screen
   document.getElementById('load-model-name').textContent = def.label;
@@ -1203,8 +1208,12 @@ async function loadModel(modelKey) {
         camera.lookAt(0, -maxD * 0.14, 0);
       }
 
-      const initRotY = CFG.initialRotationY || 0;
-      pivot.rotation.y = THREE.MathUtils.degToRad(initRotY);
+      // Set initial rotation and restart auto-spin
+      pivot.rotation.set(0, 0, 0);
+      pivot.rotation.y = THREE.MathUtils.degToRad(CFG.initialRotationY || 0);
+      autoSpin = true;
+      playBtn.textContent = '⏸';
+      playBtn.className = 'playing';
 
       ld.classList.add('fade');
       setTimeout(() => { ld.style.display='none'; }, 450);
