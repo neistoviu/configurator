@@ -20,8 +20,7 @@
     "blue4",
     "NAUO5-yellow",
     "NAUO5-green",
-    "NAUO5-red",
-    "NAUO5-red__metal"
+    "NAUO5-red"
   ],
   "accent": [
     "accent_top",
@@ -39,7 +38,6 @@
     "Remesh1",
     "Remesh",
     "ALL1_11",
-    "NAUO5-metal",
     "ALL_2",
     "ALL1_23",
     "handle_1",
@@ -549,7 +547,9 @@
     "Capsule_34",
     "Capsule_35",
     "blue4_1",
-    "ALL_3"
+    "ALL_3",
+    "NAUO5-red__metal",
+    "NAUO5-metal"
   ],
   "defaultBodyHex": null,
   "defaultAccentHex": "#F4F4F4",
