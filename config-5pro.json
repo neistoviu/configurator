@@ -17,7 +17,6 @@
     "Body11-red_1",
     "Body11-red_2",
     "Body11-YELLOW",
-    "YELLOW",
     "Body11_25",
     "Body1_3"
   ],
@@ -43,8 +42,7 @@
     "Body12_8",
     "Body12_9",
     "Body12_10",
-    "Body12_11",
-    "Body1_4"
+    "Body12_11"
   ],
   "glass": [
     "Body11",
@@ -101,8 +99,10 @@
     "SCREEN",
     "Body11-METALL_MATTE",
     "Body11-METALL_MATTE_1",
+    "Body11-red_3",
     "Body11-RED_MATTE_2",
-    "Body11-red_3"
+    "YELLOW",
+    "Body1_4"
   ],
   "defaultBodyHex": "#EAE0C8",
   "defaultAccentHex": "#BE3A34",
@@ -112,6 +112,9 @@
     "z": 0
   },
   "fixedColors": {
-    "Body11-red_3": "#111111"
+    "Body11-red_3": "#111111",
+    "Body11-RED_MATTE_2": { "color": "#CC0605", "metalness": 0.4, "roughness": 0.15 },
+    "YELLOW": { "color": "#F5E000", "metalness": 0.3, "roughness": 0.15 },
+    "Body1_4": "#FFFFFF"
   }
 }

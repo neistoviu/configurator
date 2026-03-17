@@ -13,10 +13,8 @@
     "body_back",
     "body_back1",
     "body_back_panel",
-    "NAUO1-yellow",
     "NAUO1-green",
     "NAUO1-red",
-    "NAUO1-red__metal",
     "blue1-red",
     "blue4"
   ],
@@ -140,7 +138,9 @@
     "Sweep_2",
     "Sweep_3",
     "ALL1_21",
-    "ALL1_29"
+    "ALL1_29",
+    "NAUO1-red__metal",
+    "NAUO1-yellow"
   ],
   "defaultBodyHex": null,
   "defaultAccentHex": "#E1A6AD",
@@ -148,5 +148,9 @@
     "x": 0.030,
     "y": 0.008,
     "z": 0.000
+  },
+  "fixedColors": {
+    "NAUO1-red__metal": { "color": "#CC0605", "metalness": 0.4, "roughness": 0.15 },
+    "NAUO1-yellow": { "color": "#F5E000", "metalness": 0.3, "roughness": 0.15 }
   }
 }
