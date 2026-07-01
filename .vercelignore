@@ -1,0 +1,12 @@
+.git
+.DS_Store
+README.md
+scripts/
+
+# Source / backup GLB files kept locally for rollback and future re-optimization.
+1_original_backup.glb
+1.glb
+new-roaster-1.glb
+new-roaster-2.glb
+new-roaster-3.glb
+2.5.glb

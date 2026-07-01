@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Typhoon Roasters — Configurator</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <style>
     :root {
       --bg: #0e0f12;
@@ -345,7 +346,6 @@
       }
 
       .modal { padding: 24px 20px 20px; }
-      .modal-row { flex-direction: column; gap: 8px; }
     }
 
     /* ── Get an Offer button ── */
@@ -391,79 +391,189 @@
     }
     .modal-close:hover { color: var(--text); }
 
-    .modal h2 {
-      font-size: 16px; font-weight: 700;
-      letter-spacing: 0.06em; margin-bottom: 6px;
+    .modal.offer-modal {
+      width: 640px;
+      max-width: 92vw;
+      padding: 32px;
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.34);
     }
-    .modal .modal-sub {
-      font-size: 12px; color: var(--muted); margin-bottom: 22px;
+    .modal.offer-modal .modal-close {
+      color: #5a5a5a;
+      top: 18px;
+      right: 20px;
+      z-index: 2;
     }
-    .modal-section-label {
-      font-size: 9px; font-weight: 700;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 10px; margin-top: 18px;
+    .modal.offer-modal .modal-close:hover { color: #000; }
+    .tdf-form-h {
+      font-weight: 700;
+      font-size: 38px;
+      line-height: 1.1;
+      margin-bottom: 28px;
+      padding-right: 28px;
     }
-    .modal-section-label:first-of-type { margin-top: 0; }
-
-    .modal-row {
-      display: flex; gap: 10px; margin-bottom: 10px;
+    .tdf-accent { color: #0100d8; }
+    .tdf-field-label {
+      font-weight: 500;
+      font-size: 22px;
+      margin-bottom: 14px;
     }
-
-    .modal input, .modal select, .modal textarea {
-      width: 100%; background: #1a1b20;
-      border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-size: 13px; padding: 11px 13px;
-      outline: none; transition: border-color 0.15s;
+    .tdf-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .tdf-row2 {
+      display: flex;
+      gap: 10px;
+    }
+    .modal .tdf-inp {
+      width: 100%;
+      height: 58px;
+      flex: 0 0 58px;
+      border: 1px solid #54565a;
+      border-radius: 13px;
+      padding: 0 18px;
+      background: #fff;
+      color: #000;
       font-family: inherit;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
     }
-    .modal input::placeholder, .modal textarea::placeholder {
-      color: #444450;
+    .modal .tdf-row2 .tdf-inp {
+      flex: 1 1 0;
+      min-width: 0;
     }
-    .modal input:focus, .modal select:focus, .modal textarea:focus {
-      border-color: var(--accent);
+    .modal .tdf-inp::placeholder { color: #5a5a5a; }
+    .modal .tdf-inp:focus { border-color: #0100d8; }
+    .modal .tdf-inp.tdf-error { border-color: #d32f2f; }
+    .modal textarea.tdf-inp {
+      height: 110px;
+      padding: 16px 18px;
+      resize: none;
+      flex: 0 0 auto;
     }
-    .modal select {
-      -webkit-appearance: none; appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a5a64'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 13px center;
-      padding-right: 32px; cursor: pointer;
+    .tdf-chips {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      gap: 12px;
+      margin-bottom: 28px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding: 4px 4px 10px;
+      mask-image: linear-gradient(to right,#000 92%,transparent);
+      scrollbar-width: none;
     }
-    .modal select option { background: #1a1b20; color: var(--text); }
-    .modal textarea { min-height: 80px; resize: vertical; }
-
-    .modal-phone-row { display: flex; gap: 0; }
-    .modal-phone-row select {
-      width: 100px; flex-shrink: 0;
-      border-radius: 8px 0 0 8px; border-right: none;
+    .tdf-chips::-webkit-scrollbar { display: none; }
+    .tdf-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      height: 52px;
+      padding: 0 20px;
+      flex-shrink: 0;
+      scroll-snap-align: start;
+      border: 1px solid #54565a;
+      border-radius: 14px;
+      background: transparent;
+      color: #000;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 400;
+      font-size: 16px;
+      letter-spacing: 0;
+      text-transform: none;
+      transition: background 0.25s ease,border-color 0.25s ease,transform 0.12s ease;
+      white-space: nowrap;
     }
-    .modal-phone-row input {
-      border-radius: 0 8px 8px 0;
+    .tdf-chip:hover { transform: translateY(-1px); }
+    .tdf-chip .tdf-radio {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #dbdbdb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.25s ease;
     }
-
-    .modal-submit {
-      width: 100%; padding: 13px 0; border-radius: 10px;
-      background: var(--accent); color: #fff;
-      font-size: 13px; font-weight: 700;
-      letter-spacing: 0.06em; text-transform: uppercase;
-      border: none; cursor: pointer; margin-top: 20px;
-      box-shadow: 0 4px 20px var(--accent-glow);
-      transition: background 0.15s;
+    .tdf-chip .tdf-radio::after {
+      content: "";
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #fff;
+      transform: scale(0);
+      transition: transform 0.25s cubic-bezier(.34,1.56,.64,1);
     }
-    .modal-submit:hover { background: #3578f2; }
-
-    .config-summary {
-      display: flex; gap: 12px; margin-top: 10px;
-      padding: 12px; background: #1a1b20;
-      border: 1px solid var(--border); border-radius: 8px;
+    .tdf-chip.tdf-sel {
+      background: #efefff;
+      border-color: #0100d8;
     }
-    .config-item { display: flex; align-items: center; gap: 8px; flex: 1; }
-    .config-swatch {
-      width: 28px; height: 28px; border-radius: 5px;
-      border: 1.5px solid rgba(255,255,255,0.1); flex-shrink: 0;
+    .tdf-chip.tdf-sel .tdf-radio { background: #0100d8; }
+    .tdf-chip.tdf-sel .tdf-radio::after { transform: scale(1); }
+    .tdf-submit {
+      width: 100%;
+      height: 58px;
+      border-radius: 12px;
+      background: #0100d8;
+      color: #fff;
+      border: none;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 18px;
+      cursor: pointer;
+      transition: filter 0.2s,transform 0.12s;
     }
-    .config-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-    .config-value { font-size: 12px; font-weight: 600; color: var(--text); }
+    .tdf-submit:hover {
+      filter: brightness(1.12);
+      transform: translateY(-1px);
+    }
+    .tdf-submit:disabled {
+      opacity: 0.6;
+      cursor: default;
+      transform: none;
+    }
+    .tdf-privacy {
+      font-weight: 400;
+      font-size: 13px;
+      color: #54565a;
+      margin-top: 14px;
+    }
+    .tdf-privacy a { color: #54565a; }
+    .tdf-form-ok {
+      text-align: center;
+      padding: 60px 20px;
+      font-size: 22px;
+      font-weight: 500;
+      color: #0100d8;
+    }
+    @media(max-width: 600px) {
+      .modal.offer-modal {
+        padding: 26px 20px 22px;
+        border-radius: 16px;
+        max-height: 92vh;
+      }
+      .tdf-form-h {
+        font-size: 28px;
+        margin-bottom: 24px;
+      }
+      .tdf-field-label { font-size: 18px; }
+      .tdf-row2 { flex-direction: column; }
+      .modal .tdf-row2 .tdf-inp { flex: 0 0 58px; }
+      .tdf-chip {
+        height: 48px;
+        padding: 0 16px;
+        font-size: 15px;
+      }
+    }
 
     /* ── Loading ── */
     #loading {
@@ -582,63 +692,34 @@
 
 <!-- ── Get an Offer Modal ── -->
 <div class="modal-overlay" id="offer-overlay">
-  <div class="modal">
+  <div class="modal offer-modal">
     <button class="modal-close" id="modal-close">&times;</button>
 
-    <div class="modal-section-label">Contact information</div>
-    <div class="modal-row">
-      <input type="text" id="of-name" placeholder="Your name *" required>
-      <input type="email" id="of-email" placeholder="Email *" required>
+    <div class="tdf-card" id="tdf-card">
+      <div class="tdf-form-h">Next Step to <span class="tdf-accent">Your Roaster</span></div>
+
+      <form id="tdf-form" novalidate>
+        <div class="tdf-field-label">Contact information</div>
+        <div class="tdf-inputs">
+          <div class="tdf-row2">
+            <input id="tdf-fName" class="tdf-inp" placeholder="Your name" autocomplete="name">
+            <input id="tdf-fEmail" class="tdf-inp" type="email" placeholder="Email *" autocomplete="email" required>
+          </div>
+          <input id="tdf-fPhone" class="tdf-inp" type="tel" placeholder="Phone number (+1 555-555-5555) *" autocomplete="tel" required>
+        </div>
+
+        <div class="tdf-field-label">Anything else we should know?</div>
+        <div class="tdf-inputs">
+          <textarea id="tdf-fMessage" class="tdf-inp" placeholder="Let us know any details or features you're looking for"></textarea>
+        </div>
+
+        <div class="tdf-field-label">Choose your current status</div>
+        <div class="tdf-chips" id="tdf-statusChips"></div>
+
+        <button type="submit" class="tdf-submit" id="tdf-submitBtn">Get Offer</button>
+        <div class="tdf-privacy">By pressing this button, you automatically allow us to collect <a href="#">your data</a></div>
+      </form>
     </div>
-    <div class="modal-phone-row">
-      <select id="of-phone-code">
-        <option value="+31">🇳🇱 +31</option>
-        <option value="+1">🇺🇸 +1</option>
-        <option value="+44">🇬🇧 +44</option>
-        <option value="+49">🇩🇪 +49</option>
-        <option value="+33">🇫🇷 +33</option>
-        <option value="+34">🇪🇸 +34</option>
-        <option value="+39">🇮🇹 +39</option>
-        <option value="+48">🇵🇱 +48</option>
-        <option value="+46">🇸🇪 +46</option>
-        <option value="+7">🇷🇺 +7</option>
-        <option value="+86">🇨🇳 +86</option>
-        <option value="+81">🇯🇵 +81</option>
-        <option value="+82">🇰🇷 +82</option>
-        <option value="+91">🇮🇳 +91</option>
-        <option value="+55">🇧🇷 +55</option>
-        <option value="+61">🇦🇺 +61</option>
-        <option value="+971">🇦🇪 +971</option>
-        <option value="+90">🇹🇷 +90</option>
-      </select>
-      <input type="tel" id="of-phone" placeholder="6 12345678">
-    </div>
-
-    <div class="modal-section-label" style="margin-top: 22px;">Company information</div>
-    <select id="of-status">
-      <option value="" disabled selected>Current status *</option>
-      <option value="new_business">Starting a new roastery</option>
-      <option value="existing_roastery">Existing roastery — looking to upgrade</option>
-      <option value="expanding">Expanding production capacity</option>
-      <option value="replacing">Replacing current equipment</option>
-      <option value="research">Just researching options</option>
-    </select>
-
-    <div class="modal-section-label" style="margin-top: 22px;">Your configuration</div>
-    <div class="config-summary">
-      <div class="config-item">
-        <div class="config-swatch" id="cfg-body-sw"></div>
-        <div><div class="config-label">Body</div><div class="config-value" id="cfg-body-val">Default</div></div>
-      </div>
-      <div class="config-item">
-        <div class="config-swatch" id="cfg-acc-sw"></div>
-        <div><div class="config-label">Accent</div><div class="config-value" id="cfg-acc-val">Default</div></div>
-      </div>
-    </div>
-
-    <textarea id="of-details" placeholder="Let us know any details or features you're looking for" style="margin-top: 10px;"></textarea>
-
-    <button class="modal-submit" id="of-submit">Send Request</button>
   </div>
 </div>
 
@@ -658,10 +739,33 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 // ── Model definitions ──
 const MODELS = {
-  '10pro': { file: 'new-roaster-3.glb', config: 'config-10pro.json', label: 'Typhoon 10 PRO', mobileDisplayScale: 0.95 },
-  '2pro':  { file: '2.5.glb', config: 'config-2pro.json', label: 'Typhoon 2.5 PRO' },
-  '5pro':  { file: 'new-roaster-2.glb', config: 'config-5pro.json', label: 'Typhoon 5 PRO', mobileDisplayScale: 0.95  },
-  'newroaster': { file: 'new-roaster-3.glb', config: 'config-10pro.json', label: 'Typhoon 10 PRO', mobileDisplayScale: 0.95 },
+  '10pro': {
+    file: 'new-roaster-3.web.glb',
+    mobileFile: 'new-roaster-3.mobile.glb',
+    config: 'config-10pro.json',
+    label: 'Typhoon 10 PRO',
+    mobileDisplayScale: 0.95,
+  },
+  '2pro':  {
+    file: '2.5.web.glb',
+    mobileFile: '2.5.mobile.glb',
+    config: 'config-2pro.json',
+    label: 'Typhoon 2.5 PRO',
+  },
+  '5pro':  {
+    file: 'new-roaster-2.web.glb',
+    mobileFile: 'new-roaster-2.mobile.glb',
+    config: 'config-5pro.json',
+    label: 'Typhoon 5 PRO',
+    mobileDisplayScale: 0.95,
+  },
+  'newroaster': {
+    file: 'new-roaster-3.web.glb',
+    mobileFile: 'new-roaster-3.mobile.glb',
+    config: 'config-10pro.json',
+    label: 'Typhoon 10 PRO',
+    mobileDisplayScale: 0.95,
+  },
 };
 const pageParams = new URLSearchParams(window.location.search);
 const initialModel = MODELS[pageParams.get('model')] ? pageParams.get('model') : '10pro';
@@ -700,7 +804,7 @@ let CFG = createDefaultConfig();
 async function loadConfig(url='config.json') {
   CFG = createDefaultConfig();
   try {
-    const r = await fetch(url + '?v=' + Date.now(), { cache: 'no-store' });
+    const r = await fetch(url);
     if (r.ok) {
       const loaded = await r.json();
       CFG = {
@@ -967,7 +1071,10 @@ function classifyMaterial(mat) {
 }
 
 // ── Scene ──
-const isMobile = window.innerWidth <= 768;
+function isCompactViewport() {
+  return window.matchMedia('(max-width: 768px)').matches;
+}
+const isMobile = isCompactViewport();
 const wrap = document.getElementById('canvas-wrap');
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
@@ -1114,6 +1221,8 @@ async function loadModel(modelKey) {
   ld.classList.remove('fade');
 
   await loadConfig(def.config);
+  const compactViewport = isCompactViewport();
+  const modelFile = compactViewport && def.mobileFile ? def.mobileFile : def.file;
 
   const SKIP_PREFIXES = ['SMALL_BOLT','BIG_BOLT','BOLT_3','4_Instance','Capsule',
                          '_RE_C6_','WIRE_','SIGNS','signs_','screen_'];
@@ -1122,7 +1231,7 @@ async function loadModel(modelKey) {
   const hasExplicit = CFG.body.length>0 || CFG.accent.length>0 ||
                       CFG.glass.length>0 || CFG.steel.length>0;
 
-  loader.load(def.file,
+  loader.load(modelFile,
     gltf => {
       const model = gltf.scene;
       pivot.add(model);
@@ -1206,7 +1315,7 @@ async function loadModel(modelKey) {
         -center.z + offsetZ
       );
 
-      const mobileDisplayScale = isMobile ? (def.mobileDisplayScale || 1) : 1;
+      const mobileDisplayScale = compactViewport ? (def.mobileDisplayScale || 1) : 1;
       model.scale.setScalar(mobileDisplayScale);
 
       // Place ground at model bottom
@@ -1214,7 +1323,7 @@ async function loadModel(modelKey) {
       ground.position.y     = finalBox.min.y;
       gridHelper.position.y = finalBox.min.y + 0.02;
 
-      if (isMobile) {
+      if (compactViewport) {
         camera.position.set(0, -maxD * 0.02, maxD * 2.15);
         camera.lookAt(0, -maxD * 0.10, 0);
       } else {
@@ -1333,15 +1442,167 @@ modelDropdown.addEventListener('change', () => {
 const ofOverlay = document.getElementById('offer-overlay');
 const ofClose   = document.getElementById('modal-close');
 const ofBtn     = document.getElementById('offer-btn');
-const ofSubmit  = document.getElementById('of-submit');
+const offerForm = document.getElementById('tdf-form');
+const offerSubmit = document.getElementById('tdf-submitBtn');
+const offerCard = document.getElementById('tdf-card');
+const offerStatusChips = document.getElementById('tdf-statusChips');
 
-ofBtn.addEventListener('click', () => {
+const OFFER_STATUSES = [
+  { key: 'new_business', label: 'New business' },
+  { key: 'upgrading', label: 'Upgrading my roastery' },
+  { key: 'start_shop', label: 'Start roasting in my shop' },
+  { key: 'hobby', label: 'Hobby roaster' },
+  { key: 'other', label: 'Other' },
+];
+let offerStatus = null;
+
+function renderOfferStatusChips() {
+  offerStatusChips.innerHTML = '';
+  OFFER_STATUSES.forEach(statusOption => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = `tdf-chip${offerStatus === statusOption.key ? ' tdf-sel' : ''}`;
+    chip.innerHTML = `<span>${statusOption.label}</span><span class="tdf-radio"></span>`;
+    chip.addEventListener('click', () => {
+      offerStatus = statusOption.key;
+      renderOfferStatusChips();
+    });
+    offerStatusChips.appendChild(chip);
+  });
+}
+renderOfferStatusChips();
+
+function cookieValue(name) {
+  const match = document.cookie.match(`(^|;)\\s*${name}=([^;]+)`);
+  return match ? decodeURIComponent(match[2]) : '';
+}
+
+function getOfferAttribution() {
+  const params = new URLSearchParams(location.search);
+  const utm = {};
+  const cookieUtm = cookieValue('_deco_utmz');
+  if (cookieUtm) {
+    const parts = cookieUtm.split('|');
+    utm.utm_source = parts[0] || '';
+    utm.utm_medium = parts[1] || '';
+    utm.utm_term = parts[2] || '';
+    utm.utm_campaign = parts[3] || '';
+  }
+  ['utm_source','utm_medium','utm_term','utm_campaign'].forEach(key => {
+    if (params.get(key)) utm[key] = params.get(key);
+  });
+  return {
+    utm,
+    gclid: params.get('gclid') || '',
+    ga_clientid: cookieValue('_ga'),
+    ym_clientid: cookieValue('_ym_uid'),
+    page: location.href,
+    referrer: document.referrer || cookieValue('_deco_utm_referrer'),
+  };
+}
+
+const CALLING_CODES = {
+  '1': 'US/CA', '7': 'RU', '20': 'EG', '27': 'ZA', '30': 'GR',
+  '31': 'NL', '32': 'BE', '33': 'FR', '34': 'ES', '36': 'HU',
+  '39': 'IT', '40': 'RO', '41': 'CH', '43': 'AT', '44': 'UK',
+  '45': 'DK', '46': 'SE', '47': 'NO', '48': 'PL', '49': 'DE',
+  '51': 'PE', '52': 'MX', '54': 'AR', '55': 'BR', '56': 'CL',
+  '57': 'CO', '58': 'VE', '60': 'MY', '61': 'AU', '62': 'ID',
+  '63': 'PH', '64': 'NZ', '65': 'SG', '66': 'TH', '81': 'JP',
+  '82': 'KR', '84': 'VN', '86': 'CN', '90': 'TR', '91': 'IN',
+  '92': 'PK', '93': 'AF', '94': 'LK', '95': 'MM', '98': 'IR',
+  '212': 'MA', '213': 'DZ', '216': 'TN', '218': 'LY', '221': 'SN',
+  '225': 'CI', '234': 'NG', '250': 'RW', '254': 'KE', '255': 'TZ',
+  '256': 'UG', '351': 'PT', '352': 'LU', '353': 'IE', '354': 'IS',
+  '355': 'AL', '356': 'MT', '357': 'CY', '358': 'FI', '359': 'BG',
+  '370': 'LT', '371': 'LV', '372': 'EE', '373': 'MD', '374': 'AM',
+  '375': 'BY', '376': 'AD', '377': 'MC', '380': 'UA', '381': 'RS',
+  '382': 'ME', '385': 'HR', '386': 'SI', '387': 'BA', '389': 'MK',
+  '420': 'CZ', '421': 'SK', '971': 'AE', '972': 'IL', '973': 'BH',
+  '974': 'QA', '994': 'AZ', '995': 'GE', '996': 'KG', '998': 'UZ',
+};
+
+function getPhoneCountry(phone) {
+  const digits = (phone || '').replace(/[^0-9]/g, '');
+  if (!digits) return 'Unknown';
+  for (let len = 3; len >= 1; len--) {
+    const prefix = digits.slice(0, len);
+    if (CALLING_CODES[prefix]) return CALLING_CODES[prefix];
+  }
+  return 'Unknown';
+}
+
+function getCurrentOfferConfig() {
   const bodyRal = RAL.find(r => r.hex === groupState.body.hex);
   const accRal  = RAL.find(r => r.hex === groupState.accent.hex);
-  document.getElementById('cfg-body-sw').style.background = groupState.body.hex || '#252530';
-  document.getElementById('cfg-acc-sw').style.background  = groupState.accent.hex || '#252530';
-  document.getElementById('cfg-body-val').textContent = bodyRal ? bodyRal.n : 'Default';
-  document.getElementById('cfg-acc-val').textContent  = accRal  ? accRal.n  : 'Default';
+  return {
+    model: MODELS[currentModel].label,
+    bodyColor: bodyRal ? `${bodyRal.n} (${bodyRal.hex})` : 'default',
+    accentColor: accRal ? `${accRal.n} (${accRal.hex})` : 'default',
+  };
+}
+
+const OFFER_LEAD_CFG = {
+  webhook: 'https://hooks.zapier.com/hooks/catch/15301489/42oe3d4/',
+  source: 'site',
+};
+
+function buildOfferLead(contact) {
+  const attr = getOfferAttribution();
+  const statusLabel = offerStatus
+    ? (OFFER_STATUSES.find(statusOption => statusOption.key === offerStatus)?.label || offerStatus)
+    : '';
+  const config = getCurrentOfferConfig();
+  return {
+    name: contact.name || '',
+    email: contact.email || '',
+    phone: contact.phone || '',
+    message: contact.message || '',
+    current_status: statusLabel,
+    intent: 'configurator_offer',
+    formId: 'configurator-get-offer',
+    button_text: offerSubmit ? offerSubmit.textContent.trim() : '',
+    phone_country: getPhoneCountry(contact.phone),
+    source: OFFER_LEAD_CFG.source,
+    roaster_model: config.model,
+    body_color: config.bodyColor,
+    accent_color: config.accentColor,
+    config,
+    utm_source: attr.utm.utm_source || '',
+    utm_medium: attr.utm.utm_medium || '',
+    utm_campaign: attr.utm.utm_campaign || '',
+    utm_term: attr.utm.utm_term || '',
+    gclid: attr.gclid || '',
+    ga_clientid: attr.ga_clientid || '',
+    ym_clientid: attr.ym_clientid || '',
+    page: attr.page || '',
+    referrer: attr.referrer || '',
+  };
+}
+
+function sendOfferLead(payload) {
+  fetch(OFFER_LEAD_CFG.webhook, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload),
+  }).catch(() => {});
+}
+
+function validateOfferContact(emailEl, phoneEl) {
+  emailEl.classList.remove('tdf-error');
+  phoneEl.classList.remove('tdf-error');
+  const hasEmail = emailEl.checkValidity();
+  const hasPhone = phoneEl.value.trim().length > 0;
+  if (!hasEmail) emailEl.classList.add('tdf-error');
+  if (!hasPhone) phoneEl.classList.add('tdf-error');
+  if (!hasEmail || !hasPhone) {
+    alert('Please fill in your email and phone number.');
+    return false;
+  }
+  return true;
+}
+
+ofBtn.addEventListener('click', () => {
   ofOverlay.classList.add('open');
 });
 ofClose.addEventListener('click', () => ofOverlay.classList.remove('open'));
@@ -1349,43 +1610,23 @@ ofOverlay.addEventListener('click', e => {
   if (e.target === ofOverlay) ofOverlay.classList.remove('open');
 });
 
-ofSubmit.addEventListener('click', () => {
-  const name    = document.getElementById('of-name').value.trim();
-  const email   = document.getElementById('of-email').value.trim();
-  const phone   = document.getElementById('of-phone-code').value + ' ' +
-                  document.getElementById('of-phone').value.trim();
-  const status  = document.getElementById('of-status').value;
-  const details = document.getElementById('of-details').value.trim();
-  const bodyRalName = RAL.find(r => r.hex === groupState.body.hex);
-  const accRalName  = RAL.find(r => r.hex === groupState.accent.hex);
-  const config  = {
-    model: MODELS[currentModel].label,
-    bodyColor:   bodyRalName ? `${bodyRalName.n} (${bodyRalName.hex})` : 'default',
-    accentColor: accRalName  ? `${accRalName.n} (${accRalName.hex})`  : 'default',
-  };
-
-  if (!name || !email) {
-    alert('Please fill in your name and email.');
+offerForm.addEventListener('submit', event => {
+  event.preventDefault();
+  const emailEl = document.getElementById('tdf-fEmail');
+  const phoneEl = document.getElementById('tdf-fPhone');
+  if (!validateOfferContact(emailEl, phoneEl)) {
     return;
   }
 
-  const payload = { name, email, phone, status, details, config };
-  console.log('Form payload (ready for CRM):', payload);
-
-  // TODO: replace with actual CRM endpoint, e.g.:
-  // fetch('https://your-crm-api.com/leads', {
-  //   method: 'POST', headers: {'Content-Type':'application/json'},
-  //   body: JSON.stringify(payload)
-  // });
-
-  ofOverlay.classList.remove('open');
-  alert('Thank you! We will get back to you soon.');
-
-  document.getElementById('of-name').value = '';
-  document.getElementById('of-email').value = '';
-  document.getElementById('of-phone').value = '';
-  document.getElementById('of-status').selectedIndex = 0;
-  document.getElementById('of-details').value = '';
+  const contact = {
+    name: document.getElementById('tdf-fName').value.trim(),
+    email: emailEl.value.trim(),
+    phone: phoneEl.value.trim(),
+    message: document.getElementById('tdf-fMessage').value.trim(),
+  };
+  sendOfferLead(buildOfferLead(contact));
+  offerSubmit.disabled = true;
+  offerCard.innerHTML = '<div class="tdf-form-ok">Thanks! We will get back to you within 24 hours.</div>';
 });
 </script>
 </body>
