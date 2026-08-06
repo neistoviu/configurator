@@ -65,14 +65,13 @@ export class Viewer {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.07;
+    // One axis only: drag left and right to turn the machine, nothing else.
+    // Free orbit and zoom mostly let a visitor end up under the floor or
+    // staring at a bolt, and a scroll-jacked page is worse than one that
+    // scrolls. The polar angle is pinned to the framing height in _frame().
     this.controls.enablePan = false;
-    // Turning the machine is the point; zooming and panning only let a visitor
-    // get lost, and a scroll-jacked page is worse than one that scrolls.
     this.controls.enableZoom = false;
     this.controls.rotateSpeed = 0.75;
-    // Stop just above the floor so the machine never floats over nothing.
-    this.controls.minPolarAngle = 0.20 * Math.PI;
-    this.controls.maxPolarAngle = 0.52 * Math.PI;
     this.controls.autoRotate = true;
     this.controls.autoRotateSpeed = AUTO_SPIN_SPEED;
     this.controls.addEventListener('change', () => this.invalidate());
@@ -134,10 +133,6 @@ export class Viewer {
     this.currentGltf = null;
     this.sceneKey = null;
     this.needsRender = true;
-    // Reused every frame by project()/facesAway() so marker updates allocate
-    // nothing.
-    this._scratchA = new THREE.Vector3();
-    this._scratchB = new THREE.Vector3();
     this.stats = { drawMeshes: 0, triangles: 0, mergedFrom: 0 };
 
     this._onResize = () => this.resize();
@@ -164,7 +159,6 @@ export class Viewer {
       }
       this.renderer.render(this.scene, this.camera);
       this.needsRender = false;
-      if (this.onAfterRender) this.onAfterRender();
     }
   }
 
@@ -177,15 +171,28 @@ export class Viewer {
     const w = this.wrap.clientWidth;
     const h = this.wrap.clientHeight;
     if (!w || !h) return;
+
     const wasDegenerate = this.camera.aspect <= 0 || !Number.isFinite(this.camera.aspect);
+
+    // Phone or desktop is not decided once and for all: a tab can start out
+    // narrow, a phone gets rotated, a window gets dragged across the
+    // breakpoint. Leaving this stale means phone framing on a desktop.
+    const compact = window.matchMedia('(max-width: 768px)').matches;
+    const flipped = compact !== this.isCompact;
+    if (flipped) {
+      this.isCompact = compact;
+      this.renderer.setPixelRatio(Math.min(devicePixelRatio, compact ? 2 : 1.75));
+      this.key.shadow.mapSize.set(compact ? 1024 : 2048, compact ? 1024 : 2048);
+      this.key.shadow.map?.dispose();
+      this.key.shadow.map = null;
+      this.shadowsDirty = true;
+    }
+
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
-    // If we framed the model against a bogus aspect, redo it now.
-    if ((wasDegenerate || this._needsReframe) && this._lastSize) {
-      this._needsReframe = false;
-      this._frame(this._lastSize);
-    }
+
+    if ((wasDegenerate || flipped) && this._lastSize) this._frame(this._lastSize);
     this.invalidate();
   }
 
@@ -512,17 +519,28 @@ export class Viewer {
     const fovH = 2 * Math.atan(Math.tan(fovV / 2) * aspect);
     const distV = (size.y / 2) / Math.tan(fovV / 2);
     const distH = (Math.max(size.x, size.z) / 2) / Math.tan(fovH / 2);
-    // Phones have far less room, so they get a tighter crop and the machine
-    // sits a little lower in frame, clear of the floating controls.
-    const pad = this.isCompact ? 1.24 : 1.38;
+    // A phone is portrait, so the width is what constrains the machine and
+    // there is height to spare — crop tighter than on desktop and centre it,
+    // rather than leaving a band of empty backdrop overhead.
+    const pad = this.isCompact ? 1.08 : 1.38;
     const dist = Math.max(distV, distH) * pad;
 
-    const targetY = size.y * (this.isCompact ? 0.58 : 0.52);
+    // On a phone the collapsed sheet eats the bottom strip, so aim a little
+    // lower to lift the machine into the space that is actually visible.
+    const targetY = size.y * (this.isCompact ? 0.45 : 0.52);
     this.controls.target.set(0, targetY, 0);
     // Slight three-quarter view — front-on hides the depth of the machine.
     this.camera.position.set(dist * 0.38, targetY + size.y * 0.22, dist * 0.90);
     this.controls.minDistance = dist * 0.4;
     this.controls.maxDistance = dist * 2.0;
+
+    // Pin the vertical angle to whatever framing just chose, which leaves the
+    // azimuth as the only thing a drag can change.
+    const offset = this.camera.position.clone().sub(this.controls.target);
+    const polar = Math.acos(THREE.MathUtils.clamp(offset.y / offset.length(), -1, 1));
+    this.controls.minPolarAngle = polar;
+    this.controls.maxPolarAngle = polar;
+
     this.controls.update();
     this.controls.saveState();
 
@@ -553,135 +571,6 @@ export class Viewer {
   }
 
   getGroupColor(group) { return this.groupState[group]?.hex ?? null; }
-
-  // ── Screen projection, for HTML hotspot markers ─────────────────────────────
-
-  /**
-   * Projects a world point to canvas pixels. `size` is passed in by the caller
-   * so a whole batch of markers shares one layout measurement — reading the
-   * element's size per marker forces a reflow each time.
-   */
-  project(vec3, size, out = {}) {
-    const v = this._scratchB.copy(vec3).project(this.camera);
-    out.x = (v.x * 0.5 + 0.5) * size.width;
-    out.y = (-v.y * 0.5 + 0.5) * size.height;
-    out.behind = v.z > 1;
-    return out;
-  }
-
-  get canvasSize() {
-    const el = this.renderer.domElement;
-    return { width: el.clientWidth, height: el.clientHeight };
-  }
-
-  /**
-   * Whether a marker has turned to the far side of the machine.
-   *
-   * This used to raycast the model once per marker per frame. Against merged
-   * geometry of ~440k triangles with no BVH that cost ~47 ms per ray — six
-   * markers put the page at roughly four frames per second. Comparing the
-   * anchor's surface normal against the view direction answers the same
-   * question in a few arithmetic operations.
-   *
-   * @param {THREE.Vector3} worldPos
-   * @param {THREE.Vector3} worldNormal
-   */
-  facesAway(worldPos, worldNormal) {
-    if (!worldNormal) return false;
-    const toCamera = this._scratchA.subVectors(this.camera.position, worldPos);
-    return worldNormal.dot(toCamera) <= 0;
-  }
-
-  worldFromLocal(arr, target = new THREE.Vector3()) {
-    return target.fromArray(arr).applyMatrix4(this.pivot.matrixWorld);
-  }
-
-  /** Rotates a pivot-local direction into world space. */
-  worldDirection(arr, target = new THREE.Vector3()) {
-    return target.fromArray(arr).transformDirection(this.pivot.matrixWorld);
-  }
-
-  /**
-   * Turns a face-relative anchor into a point that actually sits on the
-   * machine's skin, so hotspots land on hardware instead of floating in the
-   * air — and keep landing there if a model is ever re-exported.
-   *
-   * @param {{face:string, u:number, v:number}} anchor
-   *        face: front | back | left | right | top; u,v: 0–1 across that face
-   * @returns {{pos:number[], normal:number[]}|null} pivot-local point, nudged
-   *   clear of the surface, plus the surface normal it was found on — that
-   *   normal is what tells us later whether the marker has turned away from the
-   *   camera, without having to raycast the machine every frame.
-   */
-  /**
-   * @param {{face:string, u:number, v:number}} anchor
-   * @param {number} faceShift  quarter-turns to rotate side faces by, so that
-   *        "front" means the machine's operator side on every model
-   */
-  anchorToLocal(anchor, faceShift = 0) {
-    const model = this.pivot.children.find(c => c !== this.contactShadow);
-    if (!model || !anchor) return null;
-
-    // Work in the model's own axes, not the world's: the pivot carries the
-    // opening camera rotation, and an anchor called "front" must mean the
-    // machine's front regardless of how it happens to be turned right now.
-    model.updateWorldMatrix(true, true);
-    const toWorld = model.matrixWorld;
-    const toLocal = new THREE.Matrix4().copy(toWorld).invert();
-    const box = new THREE.Box3().setFromObject(model).applyMatrix4(toLocal);
-    const size = box.getSize(new THREE.Vector3());
-    const lerp = (a, b, t) => a + (b - a) * t;
-    const pad = Math.max(size.x, size.y, size.z);
-
-    // Start well outside the machine and shoot straight at it.
-    let origin, dir;
-    const { u, v } = anchor;
-    const SIDES = ['front', 'right', 'back', 'left'];
-    const face = anchor.face === 'top'
-      ? 'top'
-      : SIDES[(SIDES.indexOf(anchor.face) + faceShift + 4) % 4];
-
-    if (face === 'top') {
-      origin = new THREE.Vector3(
-        lerp(box.min.x, box.max.x, u), box.max.y + pad, lerp(box.min.z, box.max.z, v));
-      dir = new THREE.Vector3(0, -1, 0);
-    } else if (face === 'front' || face === 'back') {
-      const sign = face === 'front' ? 1 : -1;
-      origin = new THREE.Vector3(
-        lerp(box.min.x, box.max.x, u), lerp(box.min.y, box.max.y, v),
-        sign > 0 ? box.max.z + pad : box.min.z - pad);
-      dir = new THREE.Vector3(0, 0, -sign);
-    } else {
-      const sign = face === 'right' ? 1 : -1;
-      origin = new THREE.Vector3(
-        sign > 0 ? box.max.x + pad : box.min.x - pad,
-        lerp(box.min.y, box.max.y, v), lerp(box.min.z, box.max.z, u));
-      dir = new THREE.Vector3(-sign, 0, 0);
-    }
-
-    // Raycasting happens in world space, so carry the ray over.
-    const worldOrigin = origin.clone().applyMatrix4(toWorld);
-    const worldDir = dir.clone().transformDirection(toWorld).normalize();
-
-    const ray = new THREE.Raycaster(worldOrigin, worldDir, 0, pad * 3);
-    const hit = ray.intersectObject(model, true)[0];
-    if (!hit) return null;
-
-    // Lift the marker clear of the skin so it does not occlude itself.
-    const out = hit.point.clone().add(worldDir.clone().multiplyScalar(-0.055));
-    this.pivot.updateWorldMatrix(true, true);
-
-    // The ray direction is a good stand-in for the surface normal here: it is
-    // the face we deliberately aimed at, and unlike the triangle normal it is
-    // immune to a stray angled facet under the anchor point.
-    const normal = worldDir.clone().negate();
-    const inverse = new THREE.Matrix4().copy(this.pivot.matrixWorld).invert();
-
-    return {
-      pos: this.pivot.worldToLocal(out).toArray().map(n => +n.toFixed(3)),
-      normal: normal.transformDirection(inverse).toArray().map(n => +n.toFixed(3)),
-    };
-  }
 
   dispose() {
     window.removeEventListener('resize', this._onResize);

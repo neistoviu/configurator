@@ -3,9 +3,8 @@
 //  handles the offer form.
 // ─────────────────────────────────────────────────────────────────────────────
 import { Viewer, THREE } from './viewer.js';
-import { Hotspots, HotspotEditor } from './hotspots.js';
 import {
-  MODELS, DEFAULT_MODEL, SCENES, DEFAULT_SCENE, SPECS, SAVINGS, FACE_RING,
+  MODELS, DEFAULT_MODEL, SCENES, DEFAULT_SCENE, SPECS, SAVINGS,
   RAL, RAL_FILTERS, COLOR_PRESETS, ralByCode, ralByHex,
 } from './data.js';
 
@@ -14,7 +13,7 @@ const params = new URLSearchParams(location.search);
 
 const state = {
   model: MODELS[params.get('model')] ? params.get('model') : DEFAULT_MODEL,
-  scene: SCENES[params.get('scene')] ? params.get('scene') : DEFAULT_SCENE,
+  scene: DEFAULT_SCENE,
   activeGroup: 'body',
   filter: 'all',
   search: '',
@@ -42,15 +41,9 @@ try {
   bail('This browser could not start 3D graphics (WebGL).');
 }
 
-const hotspots = new Hotspots($('hotspot-layer'), viewer);
-
-// Handy from the browser console when tuning scenes or placing hotspots.
-window.__typhoon = { viewer, hotspots, state, THREE };
-viewer.onAfterRender = () => hotspots.update();
+// Handy from the browser console when tuning the backdrop or framing.
+window.__typhoon = { viewer, state, THREE };
 viewer.onUserInteract = () => setRotate(false);
-// Reading a card while the machine keeps turning is unusable, so opening one
-// stops the spin.
-hotspots.onOpenChange = open => { if (open) setRotate(false); };
 
 // ── Loading overlay ──────────────────────────────────────────────────────────
 function showLoading(label) {
@@ -76,7 +69,6 @@ async function loadModel(key) {
   syncModelSelectors(key);
   syncUrl();
   renderSpecs(key);
-  hotspots.clear();
   showLoading(def.label);
 
   const cfg = await fetch(def.config).then(r => r.json()).catch(() => ({}));
@@ -109,11 +101,8 @@ async function loadModel(key) {
     if (hex) updateSelectedSwatch(group, hex);
   });
 
-  hotspots.setModel(key, FACE_RING.indexOf(def.frontFace || '+z'));
   setRotate(true);
   hideLoading();
-
-  if (params.get('edit') === 'hotspots') new HotspotEditor(viewer, key, THREE);
 }
 
 function syncModelSelectors(key) {
@@ -128,8 +117,6 @@ function syncUrl() {
   const url = new URL(location.href);
   if (state.model === DEFAULT_MODEL) url.searchParams.delete('model');
   else url.searchParams.set('model', state.model);
-  if (state.scene === DEFAULT_SCENE) url.searchParams.delete('scene');
-  else url.searchParams.set('scene', state.scene);
   history.replaceState({}, '', url);
 }
 
@@ -150,30 +137,6 @@ function renderSpecs(key) {
        fewer defects <b class="n-defect">${s.defects}</b>.
        Payback at 50% utilisation ≈ <b class="n-pay">${s.payback}</b>.`
     : '';
-}
-
-// ── Scene presets ────────────────────────────────────────────────────────────
-function buildSceneSwitch() {
-  $('scene-switch').innerHTML = Object.entries(SCENES).map(([key, preset]) => `
-    <button class="scene-btn${key === state.scene ? ' active' : ''}"
-            data-scene="${key}" type="button" title="${preset.hint}">
-      <span class="scene-chip" style="background:linear-gradient(160deg,${preset.backdrop[0]},${preset.backdrop[2]})"></span>
-      ${preset.label}
-    </button>`).join('');
-
-  $('scene-switch').querySelectorAll('.scene-btn').forEach(btn => {
-    btn.addEventListener('click', () => setScene(btn.dataset.scene));
-  });
-}
-
-async function setScene(key) {
-  state.scene = key;
-  $('scene-switch').querySelectorAll('.scene-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.scene === key);
-  });
-  $('scene-hint').textContent = SCENES[key].hint;
-  await viewer.applyScene(key);
-  syncUrl();
 }
 
 // ── Colour picker ────────────────────────────────────────────────────────────
@@ -260,9 +223,17 @@ function applyColor(group, ral) {
 function updateSelectedSwatch(group, hex) {
   const ral = ralByHex(hex);
   const prefix = group === 'body' ? 'body' : 'acc';
+  const code = ral ? ral.n : '—';
+
   $(`${prefix}-sw`).style.background = hex;
-  $(`${prefix}-code`).textContent = ral ? ral.n : '—';
+  $(`${prefix}-code`).textContent = code;
   $(`${prefix}-name`).textContent = ral ? ral.name : 'Custom';
+
+  // The badge over the viewport and the swatches on the collapsed sheet, so a
+  // phone screenshot still says which paint this is.
+  $(`cb-${prefix}-sw`).style.background = hex;
+  $(`cb-${prefix}-code`).textContent = code;
+  $(`sheet-${prefix}-sw`).style.background = hex;
 }
 
 // ── Viewport controls ────────────────────────────────────────────────────────
@@ -278,17 +249,22 @@ function setRotate(on) {
 // something a visitor should have to think about.
 const LIGHT_ANGLE_PCT = 40;
 
+/**
+ * On a phone the palette lives in a sheet that slides up over the machine, so
+ * it can be pushed out of the way to look at the roaster or photograph it.
+ */
+function bindSheet() {
+  const handle = $('sheet-handle');
+  handle.addEventListener('click', () => {
+    const open = document.body.classList.toggle('sheet-open');
+    handle.setAttribute('aria-expanded', String(open));
+  });
+}
+
 function bindViewportControls() {
   $('rotate-btn').addEventListener('click', () => setRotate(!viewer.controls.autoRotate));
   viewer.setLightAngle(LIGHT_ANGLE_PCT * 3.6);
 
-  const hsBtn = $('hotspot-btn');
-  hsBtn.addEventListener('click', () => {
-    const on = !hotspots.visible;
-    hotspots.setVisible(on);
-    hsBtn.classList.toggle('on', on);
-    hsBtn.setAttribute('aria-pressed', String(on));
-  });
 
   // controls.reset() restores the state saved right after the model was framed.
   $('reset-btn').addEventListener('click', () => {
@@ -466,13 +442,12 @@ $('ral-search').addEventListener('input', e => {
   renderGrid();
 });
 
-buildSceneSwitch();
 buildGroupTabs();
 buildFilters();
 buildPresets();
+bindSheet();
 bindViewportControls();
 bindOfferModal();
-$('scene-hint').textContent = SCENES[state.scene].hint;
 
 await viewer.applyScene(state.scene);
 await loadModel(state.model);

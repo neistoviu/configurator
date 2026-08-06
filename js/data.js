@@ -1,17 +1,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  Static data for the configurator: models, specs, hotspots, scenes, palette.
+//  Static data for the configurator: models, specs, backdrop, RAL palette.
 //  Editing copy or numbers? Everything user-visible lives in this file.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Roaster models ───────────────────────────────────────────────────────────
 //
 //  file        optimized GLB built by scripts/build-models.sh
-//  frontFace   which local axis the machine's operator side points down.
-//              Everything downstream — the opening camera angle and every
-//              hotspot anchor — is expressed relative to this, so a model that
-//              gets re-exported at a different orientation only needs this one
-//              value corrected.
-//  faceYaw     degrees to spin the model so its front meets the camera
+//  faceYaw     degrees to spin the model so its operator side meets the camera.
+//              A re-exported model that comes back turned around needs only
+//              this value corrected.
 //  defaultBody / defaultAccent  the paint the configurator opens on. These win
 //              over defaultBodyHex/defaultAccentHex in config-*.json, so every
 //              model greets a visitor in the signature ivory + vermilion rather
@@ -23,7 +20,6 @@ export const MODELS = {
     config: 'config-10pro.json',
     label: 'Typhoon 10 PRO',
     short: '10 PRO',
-    frontFace: '+x',
     faceYaw: 270,
     defaultBody: 'RAL 1015',
     defaultAccent: 'RAL 2002',
@@ -34,7 +30,6 @@ export const MODELS = {
     config: 'config-5pro.json',
     label: 'Typhoon 5 PRO',
     short: '5 PRO',
-    frontFace: '+z',
     faceYaw: 0,
     defaultBody: 'RAL 1015',
     defaultAccent: 'RAL 2002',
@@ -45,16 +40,12 @@ export const MODELS = {
     config: 'config-2pro.json',
     label: 'Typhoon 2.5 PRO',
     short: '2.5 PRO',
-    frontFace: '+z',
     faceYaw: 0,
     defaultBody: 'RAL 1015',
     defaultAccent: 'RAL 2002',
   },
 };
 
-/** Local axes in clockwise order, used to rotate anchors onto a model's front. */
-export const FACE_RING = ['+z', '+x', '-z', '-x'];
-export const FACE_NAMES = ['front', 'right', 'back', 'left'];
 
 // Legacy alias kept so old links keep resolving.
 MODELS.newroaster = MODELS['10pro'];
@@ -96,152 +87,21 @@ export const SAVINGS = {
   '2pro':  { total: '€2,590', labour: '€1,594', electricity: '€183', defects: '€812',   payback: '3 months' },
 };
 
-// ── Hotspots ─────────────────────────────────────────────────────────────────
-// Shared feature copy. Per-model positions live in HOTSPOT_POSITIONS below so
-// the same story can be told on every machine without duplicating text.
-export const FEATURES = {
-  chamber: {
-    icon: '◎',
-    title: 'Transparent roasting chamber',
-    metric: '1 second to open',
-    text: 'Watch the bean through every stage instead of guessing from a trier. '
-        + 'The chamber opens in one second without tools, and the food-grade '
-        + 'stainless interior is chemically washable.',
-  },
-  convection: {
-    icon: '≋',
-    title: '100% convection, fully electric',
-    metric: 'No gas · no open flame',
-    text: 'Heat is carried entirely by air, so there is no drum wall to scorch '
-        + 'the bean and no burner to calibrate. No gas line, no flame, no leak '
-        + 'risk — and permits get dramatically simpler.',
-  },
-  throughput: {
-    icon: '↻',
-    title: 'No cooldown between batches',
-    metric: 'Up to 6–7 batches/hour',
-    text: 'Thermal conditions reset instantly after each drop, so batch 1 and '
-        + 'batch 20 roast identically. No warm-up protocol, no waiting — which '
-        + 'is where the labour saving actually comes from.',
-  },
-  control: {
-    icon: '⌁',
-    title: 'Typhoon PRO control',
-    metric: 'Cropster & Artisan',
-    text: 'Three auto-repeat modes lock a profile in place across operators. '
-        + 'Airflow, heat and recirculation run on guardrails with manual '
-        + 'override, and the huge heater reserve beats any gas burner on RoR.',
-  },
-  efficiency: {
-    icon: '⌾',
-    title: 'Hot-air recirculation',
-    metric: '≈0.3 kWh per kg',
-    text: 'Air is recirculated rather than dumped, and 50+ mm of insulation '
-        + 'keeps the heat inside. The outer surface stays cool during '
-        + 'operation — safe to stand next to all shift.',
-  },
-  safety: {
-    icon: '⛨',
-    title: 'Fire safety in the cyclone',
-    metric: 'Integrated system',
-    text: 'Chaff is the usual fire source in a roastery. The suppression system '
-        + 'sits inside the cyclone where it belongs, with no open flame '
-        + 'anywhere in the machine to start with.',
-  },
-  service: {
-    icon: '⚙',
-    title: 'Service in minutes',
-    metric: '24-month warranty',
-    text: 'Few moving parts, no burner and no gas valves. Remote diagnostics, '
-        + 'software updates and a spare-parts kit ship with the machine — '
-        + 'heaters, sensors, glasses, gaskets and actuators.',
-  },
-};
-
-// Where each hotspot sits on the machine.
+// ── Backdrop ─────────────────────────────────────────────────────────────────
+//  A single neutral studio sweep. It is generated in code, so it costs no
+//  download and no draw calls beyond one floor disc.
 //
-// Rather than hard-coding metre coordinates that break the moment a model is
-// re-exported, an anchor names a face and a position across it (u, v from 0 to
-// 1). At load time the viewer fires a ray at that spot and pins the marker to
-// whatever hardware it hits — so the markers follow the geometry.
-//
-//   face: front · back · left · right (all relative to MODELS[].frontFace)
-//         plus top
-//   front/back/left/right → u runs across the face, v runs bottom-to-top
-//   top                   → u runs across, v runs front-to-back
-//
-// Override any of these with an explicit [x, y, z] via HOTSPOT_POSITIONS below
-// (use ?edit=hotspots to capture the numbers by clicking).
-export const HOTSPOT_ANCHORS = {
-  '10pro': {
-    chamber:    { face: 'front', u: 0.46, v: 0.62 },
-    control:    { face: 'front', u: 0.76, v: 0.44 },
-    throughput: { face: 'top',   u: 0.62, v: 0.42 },
-    convection: { face: 'back',  u: 0.46, v: 0.58 },
-    efficiency: { face: 'front', u: 0.22, v: 0.20 },
-    safety:     { face: 'left',  u: 0.50, v: 0.86 },
-  },
-  '5pro': {
-    chamber:    { face: 'front', u: 0.50, v: 0.62 },
-    control:    { face: 'right', u: 0.45, v: 0.50 },
-    throughput: { face: 'top',   u: 0.62, v: 0.50 },
-    convection: { face: 'back',  u: 0.46, v: 0.58 },
-    efficiency: { face: 'front', u: 0.30, v: 0.20 },
-    safety:     { face: 'left',  u: 0.48, v: 0.84 },
-  },
-  '2pro': {
-    chamber:    { face: 'front', u: 0.50, v: 0.60 },
-    control:    { face: 'right', u: 0.45, v: 0.50 },
-    throughput: { face: 'top',   u: 0.60, v: 0.50 },
-    convection: { face: 'back',  u: 0.46, v: 0.56 },
-    efficiency: { face: 'front', u: 0.30, v: 0.20 },
-    safety:     { face: 'left',  u: 0.48, v: 0.84 },
-  },
-};
-
-// Explicit overrides win over the anchors above. Empty by default.
-export const HOTSPOT_POSITIONS = {
-  '10pro': {},
-  '5pro': {},
-  '2pro': {},
-};
-
-// ── Scene presets ────────────────────────────────────────────────────────────
-// Every preset is generated procedurally at runtime — no image downloads.
-// Drop a real photo in later by adding `envUrl: 'scenes/whatever.jpg'`
-// (equirectangular 2:1); the viewer will use it instead of the procedural one.
-// ── Backdrops ────────────────────────────────────────────────────────────────
 //  backdrop  gradient behind the machine, top → bottom
-//  env       gradient of the offscreen lightbox (drives reflections); falls
-//            back to `backdrop` when omitted
-//  lights    softbox panels — reflections only, never drawn on screen
+//  env       gradient of the offscreen lightbox (drives reflections)
+//  lights    softbox panels — these live in the reflections only and are
+//            never drawn on screen
 //
-//  Two are offered for a reason: a white machine on a white backdrop
-//  disappears, so light paint needs the graphite option and vice versa.
+//  Grey rather than white on purpose: most Typhoon machines are painted pale,
+//  and pale paint on a white sweep loses its edges.
 export const SCENES = {
-  light: {
-    label: 'Light',
-    hint: 'Studio white — truest colour match',
-    backdrop: ['#ffffff', '#f0f1f4', '#dcdfe5'],
-    env:      ['#ffffff', '#eef0f4', '#c9ced7'],
-    floor: { color: '#eceef2', roughness: 0.55, metalness: 0.06 },
-    exposure: 1.0,
-    envIntensity: 1.0,
-    shadowOpacity: 0.30,
-    fog: { color: '#e4e7ec', near: 9, far: 24 },
-    lights: [
-      { pos: [ 4.5, 3.4,  3.6], size: [5.5, 4.0], color: '#ffffff', power: 5.0 },
-      { pos: [-5.0, 2.8, -1.6], size: [4.5, 3.6], color: '#f2f6ff', power: 2.6 },
-      { pos: [ 0.0, 6.0,  0.4], size: [9.0, 7.0], color: '#ffffff', power: 2.0, faceDown: true },
-    ],
-    key:  { color: '#fffaf4', intensity: 2.2, pos: [ 5, 8,  6] },
-    fill: { color: '#eef4ff', intensity: 1.0, pos: [-6, 4, -4] },
-    rim:  { color: '#ffffff', intensity: 0.8, pos: [ 0, 3, -8] },
-  },
-
   graphite: {
     label: 'Graphite',
-    hint: 'Neutral grey — for pale and white paint',
+    hint: 'Neutral studio grey',
     backdrop: ['#8f949c', '#6d727a', '#4b4f56'],
     env:      ['#a8adb5', '#7b8088', '#43464c'],
     floor: { color: '#5e626a', roughness: 0.5, metalness: 0.08 },
@@ -260,7 +120,7 @@ export const SCENES = {
   },
 };
 
-export const DEFAULT_SCENE = 'light';
+export const DEFAULT_SCENE = 'graphite';
 
 // ── Colour presets ───────────────────────────────────────────────────────────
 // One-click combinations so a visitor sees a good-looking machine immediately
