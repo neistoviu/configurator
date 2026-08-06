@@ -34,8 +34,12 @@ export class Viewer {
     this.isCompact = window.matchMedia('(max-width: 768px)').matches;
 
     // ── Renderer ──
+    // Antialiasing used to be off on phones as a precaution. It is the single
+    // biggest thing you notice on a retina screen — every panel edge on the
+    // machine turns into a staircase — and with the scene down to ~27 draw
+    // calls there is no longer a budget reason to skip it.
     this.renderer = new THREE.WebGLRenderer({
-      antialias: !this.isCompact,
+      antialias: true,
       powerPreference: 'high-performance',
       stencil: false,
     });
@@ -45,7 +49,9 @@ export class Viewer {
     const w0 = this.wrap.clientWidth || 1;
     const h0 = this.wrap.clientHeight || 1;
 
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, this.isCompact ? 2 : 1.75));
+    // A phone reports devicePixelRatio 3; rendering at 2.5 keeps panel edges
+    // crisp and still costs a fraction of a millisecond a frame here.
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, this.isCompact ? 2.5 : 2));
     this.renderer.setSize(w0, h0);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -181,7 +187,7 @@ export class Viewer {
     const flipped = compact !== this.isCompact;
     if (flipped) {
       this.isCompact = compact;
-      this.renderer.setPixelRatio(Math.min(devicePixelRatio, compact ? 2 : 1.75));
+      this.renderer.setPixelRatio(Math.min(devicePixelRatio, compact ? 2.5 : 2));
       this.key.shadow.mapSize.set(compact ? 1024 : 2048, compact ? 1024 : 2048);
       this.key.shadow.map?.dispose();
       this.key.shadow.map = null;

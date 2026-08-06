@@ -486,7 +486,7 @@ textarea.tdf-inp { height: 110px; padding: 16px 18px; resize: none; flex: 0 0 au
   body.sheet-open .dock { bottom: calc(var(--sheet-height) + 14px); }
 
   /* ── Bottom sheet ── */
-  :root { --sheet-peek: 62px; --sheet-height: 54dvh; }
+  :root { --sheet-peek: 56px; --sheet-height: 63dvh; }
 
   .sidebar {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 12;
@@ -505,7 +505,12 @@ textarea.tdf-inp { height: 110px; padding: 16px 18px; resize: none; flex: 0 0 au
     display: flex; align-items: center; gap: 10px;
     width: 100%; height: var(--sheet-peek); flex-shrink: 0;
     padding: 0 16px; position: relative;
+    touch-action: none;          /* we handle the drag ourselves */
+    -webkit-tap-highlight-color: transparent;
   }
+  /* While a finger is on it the sheet follows directly, so the CSS transition
+     has to stand aside or it fights the drag. */
+  .sidebar.dragging { transition: none; }
   .sheet-grip {
     position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
     width: 34px; height: 4px; border-radius: 2px;
@@ -526,6 +531,10 @@ textarea.tdf-inp { height: 110px; padding: 16px 18px; resize: none; flex: 0 0 au
     transition: transform .32s var(--ease);
   }
   body.sheet-open .sheet-chevron { transform: rotate(180deg); }
+  body.sheet-open .sheet-preview { display: none; }
+  body.sheet-open .sheet-label { display: none; }
+  body.sheet-open #sheet-handle { height: 34px; }
+  body.sheet-open .sheet-chevron { margin-top: 2px; }
 
   /* The handle already says PAINT; the section heading would repeat it. */
   .side-section:first-of-type .side-head { display: none; }
@@ -536,15 +545,20 @@ textarea.tdf-inp { height: 110px; padding: 16px 18px; resize: none; flex: 0 0 au
   /* Lift the machine out from behind the open sheet. The colour badge stays
      put, since that is the bit a screenshot needs. */
   #canvas-wrap canvas { transition: transform .32s var(--ease); }
-  body.sheet-open #canvas-wrap canvas { transform: translateY(-21%); }
+  body.sheet-open #canvas-wrap canvas { transform: translateY(-25%); }
   .group-tabs { gap: 6px; }
-  .group-tab { padding: 7px 8px; gap: 7px; }
-  .tab-sw { width: 24px; height: 24px; border-radius: 6px; }
+  .group-tab { padding: 6px 8px; gap: 7px; }
+  .tab-sw { width: 22px; height: 22px; border-radius: 6px; }
   .tab-name { display: none; }
+  .tab-role { font-size: 8px; }
+  .tab-code { font-size: 11.5px; }
 
   #presets { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
   #presets::-webkit-scrollbar { display: none; }
-  .preset { flex-shrink: 0; min-width: 66px; }
+  .preset { flex-shrink: 0; min-width: 62px; padding: 6px 4px 5px; gap: 4px; }
+  .preset-sw { width: 34px; height: 14px; }
+  .preset-name { font-size: 9px; }
+  .side-head { margin-bottom: 6px; }
 
   #ral-search { display: none; }
   #ral-filters {
@@ -554,19 +568,28 @@ textarea.tdf-inp { height: 110px; padding: 16px 18px; resize: none; flex: 0 0 au
   #ral-filters::-webkit-scrollbar { display: none; }
 
   .grid-wrap {
-    flex: 1; min-height: 0; overflow-y: auto;
-    padding: 8px 12px 10px; margin-top: 8px;
+    flex: 1; min-height: 0;
+    overflow-x: auto; overflow-y: hidden;
+    padding: 10px 12px 12px; margin-top: 6px;
+    display: flex; align-items: start;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
   }
+  .grid-wrap::-webkit-scrollbar { display: none; }
   #ral-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-    gap: 7px;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(4, 44px);
+    grid-auto-columns: 44px;
+    gap: 8px;
   }
-  .sw { width: 100%; aspect-ratio: 1; border-radius: 8px; }
+  .sw { width: 44px; height: 44px; aspect-ratio: auto; border-radius: 9px; }
   .sw:hover { transform: none; }
+  .grid-empty { white-space: nowrap; }
 
-  #offer-btn { margin: 10px 12px 0; padding: 13px 0; }
-  .disclaimer { padding: 8px 12px 10px; font-size: 10px; }
+  #offer-btn { margin: 9px 12px 0; padding: 12px 0; }
+  .disclaimer { padding: 6px 12px 8px; font-size: 9.5px; }
 
   .modal { padding: 26px 20px 22px; border-radius: 16px; max-height: 92vh; }
   .tdf-form-h { font-size: 26px; margin-bottom: 20px; }

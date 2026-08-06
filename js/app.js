@@ -255,9 +255,66 @@ const LIGHT_ANGLE_PCT = 40;
  */
 function bindSheet() {
   const handle = $('sheet-handle');
-  handle.addEventListener('click', () => {
-    const open = document.body.classList.toggle('sheet-open');
+  const sheet = $('sidebar');
+
+  const setOpen = open => {
+    document.body.classList.toggle('sheet-open', open);
     handle.setAttribute('aria-expanded', String(open));
+  };
+
+  // How far the sheet sits below its open position when closed.
+  const closedOffset = () => {
+    const peek = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--sheet-peek')) || 56;
+    return Math.max(sheet.offsetHeight - peek, 0);
+  };
+
+  let startY = null;
+  let startOffset = 0;
+  let moved = 0;
+  let pointerHandled = false;
+
+  handle.addEventListener('pointerdown', event => {
+    if (!viewer.isCompact) return;
+    startY = event.clientY;
+    startOffset = document.body.classList.contains('sheet-open') ? 0 : closedOffset();
+    moved = 0;
+    sheet.classList.add('dragging');
+    handle.setPointerCapture(event.pointerId);
+  });
+
+  handle.addEventListener('pointermove', event => {
+    if (startY === null) return;
+    const dy = event.clientY - startY;
+    moved = Math.max(moved, Math.abs(dy));
+    // Follow the finger, clamped to the two resting positions.
+    const y = Math.min(Math.max(startOffset + dy, 0), closedOffset());
+    sheet.style.transform = `translateY(${y}px)`;
+  });
+
+  const release = event => {
+    if (startY === null) return;
+    const dy = event.clientY - startY;
+    startY = null;
+    sheet.classList.remove('dragging');
+    sheet.style.transform = '';
+
+    // A tap toggles; a drag lands wherever it was heading.
+    if (moved < 8) setOpen(!document.body.classList.contains('sheet-open'));
+    else setOpen(dy < 0);
+
+    // The click that follows this gesture must not undo it.
+    pointerHandled = true;
+    setTimeout(() => { pointerHandled = false; }, 0);
+  };
+  handle.addEventListener('pointerup', release);
+  handle.addEventListener('pointercancel', release);
+
+  // Keyboard, assistive tech and anything else that clicks without a pointer
+  // gesture still has to work.
+  handle.addEventListener('click', () => {
+    if (pointerHandled) return;
+    setOpen(!document.body.classList.contains('sheet-open'));
   });
 }
 

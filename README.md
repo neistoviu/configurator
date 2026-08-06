@@ -119,6 +119,16 @@ photograph it. The chosen paint stays on screen in a badge over the viewport —
 that is what makes a screenshot self-explanatory — and the machine lifts clear
 of the sheet when it opens.
 
+The sheet is dragged, not tapped: it follows the finger and lands wherever the
+swipe was heading. A tap on the handle still toggles it, and so does a plain
+click, which is what keyboards and assistive tech send.
+
+The palette scrolls **sideways**, four rows deep — a thumb swipes across far
+more comfortably than it scrolls a tall list, and the chips are large enough to
+hit. Expanded, the handle collapses to a grab bar: the Body/Accent rows right
+below it already say which colours are chosen, so repeating them costs height
+the palette wants.
+
 `--sheet-peek` and `--sheet-height` in `index.html` control the collapsed and
 expanded sizes.
 
@@ -132,6 +142,10 @@ expanded sizes.
 - **Frames are drawn on demand** — nothing is rendered while nothing moves.
 - **Meshes sharing a material are merged**, which takes the 10 PRO from ~1085
   draw calls to 27.
+
+That headroom is spent where it shows: antialiasing is on everywhere (it used
+to be off on phones, which turned every panel edge into a staircase) and phones
+render at up to 2.5× device pixels.
 
 Steady frames cost well under a millisecond of main-thread time. If you add
 anything that runs per frame, measure it before trusting it:
