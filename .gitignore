@@ -5,3 +5,6 @@ Thumbs.db
 
 # Intermediate exports from scripts/export-baked.html live in ~/Downloads;
 # the compressed results are committed under dist-baked/.
+
+# Ad-hoc archives of the standalone models.
+dist-baked/*.zip

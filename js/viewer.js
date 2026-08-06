@@ -19,7 +19,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {
-  EnvironmentFactory, buildRoom, hideEnvOnlyFixtures,
+  EnvironmentFactory, buildFloor, gradientTexture,
   contactShadowTexture, loadEquirect,
 } from './scene-presets.js';
 import { SCENES } from './data.js';
@@ -52,6 +52,10 @@ export class Viewer {
     this.renderer.toneMappingExposure = 1.1;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // Only the camera orbits — the machine and the light rig stand still — so
+    // the shadow map is re-rendered on demand rather than every frame.
+    this.renderer.shadowMap.autoUpdate = false;
+    this.shadowsDirty = true;
     this.wrap.appendChild(this.renderer.domElement);
 
     this.scene = new THREE.Scene();
@@ -62,8 +66,10 @@ export class Viewer {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.07;
     this.controls.enablePan = false;
+    // Turning the machine is the point; zooming and panning only let a visitor
+    // get lost, and a scroll-jacked page is worse than one that scrolls.
+    this.controls.enableZoom = false;
     this.controls.rotateSpeed = 0.75;
-    this.controls.zoomSpeed = 0.8;
     // Stop just above the floor so the machine never floats over nothing.
     this.controls.minPolarAngle = 0.20 * Math.PI;
     this.controls.maxPolarAngle = 0.52 * Math.PI;
@@ -90,8 +96,10 @@ export class Viewer {
     this.rim = new THREE.DirectionalLight(0xffffff, 1.0);
     this.lightRig.add(this.fill, this.rim);
 
-    // ── The room (rebuilt per scene preset) + contact shadow ──
-    this.room = null;
+    // ── Floor + contact shadow ──
+    this.floor = buildFloor();
+    this.scene.add(this.floor);
+    this.backgroundTexture = null;
 
     this.contactShadow = new THREE.Mesh(
       new THREE.PlaneGeometry(1, 1),
@@ -126,6 +134,10 @@ export class Viewer {
     this.currentGltf = null;
     this.sceneKey = null;
     this.needsRender = true;
+    // Reused every frame by project()/facesAway() so marker updates allocate
+    // nothing.
+    this._scratchA = new THREE.Vector3();
+    this._scratchB = new THREE.Vector3();
     this.stats = { drawMeshes: 0, triangles: 0, mergedFrom: 0 };
 
     this._onResize = () => this.resize();
@@ -146,6 +158,10 @@ export class Viewer {
     const animating = this.controls.autoRotate || this.controls.enableDamping;
     if (animating) this.controls.update();
     if (this.needsRender || this.controls.autoRotate) {
+      if (this.shadowsDirty) {
+        this.renderer.shadowMap.needsUpdate = true;
+        this.shadowsDirty = false;
+      }
       this.renderer.render(this.scene, this.camera);
       this.needsRender = false;
       if (this.onAfterRender) this.onAfterRender();
@@ -180,24 +196,6 @@ export class Viewer {
     if (!preset) return;
     this.sceneKey = key;
 
-    // Swap in the new room.
-    if (this.room) {
-      this.scene.remove(this.room);
-      this.room.traverse(o => {
-        if (o.geometry) o.geometry.dispose();
-        if (o.material) {
-          if (o.material.map) o.material.map.dispose();
-          o.material.dispose();
-        }
-      });
-    }
-    this.room = buildRoom(preset);
-    // Racking, sacks and shelving are hundreds of little boxes sharing a
-    // handful of materials — collapse them the same way we do the machine.
-    if (MERGE_DRAW_CALLS) this._mergeByMaterial(this.room);
-    this.scene.add(this.room);
-
-    // Lights first — the environment capture below renders the lit room.
     const apply = (light, spec) => {
       light.color.set(spec.color);
       light.intensity = spec.intensity;
@@ -206,27 +204,38 @@ export class Viewer {
     apply(this.key, preset.key);
     apply(this.fill, preset.fill);
     apply(this.rim, preset.rim);
-    this.renderer.toneMappingExposure = preset.exposure ?? 1.1;
+    this.renderer.toneMappingExposure = preset.exposure ?? 1.0;
 
-    // Reflections come from the room itself, with the product left out.
+    // Seamless gradient behind the machine.
+    if (this.backgroundTexture) this.backgroundTexture.dispose();
+    this.backgroundTexture = gradientTexture(preset.backdrop);
+    this.scene.background = this.backgroundTexture;
+
+    // Reflections come from an offscreen lightbox — nothing extra to draw.
     this.scene.environment = preset.envUrl
       ? (await loadEquirect(this.renderer, preset.envUrl)).envMap
-      : this.envFactory.capture(key, this.scene, [this.pivot, this.contactShadow]);
+      : this.envFactory.get(key, preset);
     this.scene.environmentIntensity = preset.envIntensity ?? 1;
-    hideEnvOnlyFixtures(this.room);
 
-    // The room encloses the camera, so no sky is needed behind it.
-    this.scene.background = null;
+    this.floor.material.color.set(preset.floor.color);
+    this.floor.material.roughness = preset.floor.roughness;
+    this.floor.material.metalness = preset.floor.metalness;
+    this.floor.material.needsUpdate = true;
+    this.contactShadow.material.opacity = preset.shadowOpacity ?? 0.3;
+
+    // Fog tinted to the backdrop helps the floor disc dissolve into it.
     this.scene.fog = preset.fog
       ? new THREE.Fog(preset.fog.color, preset.fog.near, preset.fog.far)
       : null;
 
+    this.shadowsDirty = true;
     this.invalidate();
   }
 
   /** Swings the whole light rig; drives the "Light" slider. */
   setLightAngle(deg) {
     this.lightRig.rotation.y = THREE.MathUtils.degToRad(deg);
+    this.shadowsDirty = true;
     this.invalidate();
   }
 
@@ -416,6 +425,7 @@ export class Viewer {
     this._aimShadow(finalSize);
 
     this.pivot.rotation.y = THREE.MathUtils.degToRad(cfg.initialRotationY || 0);
+    this.shadowsDirty = true;
     this.invalidate();
   }
 
@@ -546,30 +556,49 @@ export class Viewer {
 
   // ── Screen projection, for HTML hotspot markers ─────────────────────────────
 
-  project(vec3) {
-    const v = vec3.clone().project(this.camera);
-    const rect = this.renderer.domElement.getBoundingClientRect();
-    return {
-      x: (v.x * 0.5 + 0.5) * rect.width,
-      y: (-v.y * 0.5 + 0.5) * rect.height,
-      behind: v.z > 1,
-    };
+  /**
+   * Projects a world point to canvas pixels. `size` is passed in by the caller
+   * so a whole batch of markers shares one layout measurement — reading the
+   * element's size per marker forces a reflow each time.
+   */
+  project(vec3, size, out = {}) {
+    const v = this._scratchB.copy(vec3).project(this.camera);
+    out.x = (v.x * 0.5 + 0.5) * size.width;
+    out.y = (-v.y * 0.5 + 0.5) * size.height;
+    out.behind = v.z > 1;
+    return out;
   }
 
-  /** True when the machine itself stands between the camera and the point. */
-  isOccluded(worldPos, raycaster = this._ray || (this._ray = new THREE.Raycaster())) {
-    const dir = worldPos.clone().sub(this.camera.position);
-    const dist = dir.length();
-    raycaster.set(this.camera.position, dir.normalize());
-    raycaster.far = dist - 0.03;
-    const hits = raycaster.intersectObject(this.pivot, true);
-    return hits.length > 0;
+  get canvasSize() {
+    const el = this.renderer.domElement;
+    return { width: el.clientWidth, height: el.clientHeight };
   }
 
-  worldFromLocal(arr) {
-    const v = new THREE.Vector3(...arr);
-    this.pivot.updateMatrixWorld(true);
-    return this.pivot.localToWorld(v);
+  /**
+   * Whether a marker has turned to the far side of the machine.
+   *
+   * This used to raycast the model once per marker per frame. Against merged
+   * geometry of ~440k triangles with no BVH that cost ~47 ms per ray — six
+   * markers put the page at roughly four frames per second. Comparing the
+   * anchor's surface normal against the view direction answers the same
+   * question in a few arithmetic operations.
+   *
+   * @param {THREE.Vector3} worldPos
+   * @param {THREE.Vector3} worldNormal
+   */
+  facesAway(worldPos, worldNormal) {
+    if (!worldNormal) return false;
+    const toCamera = this._scratchA.subVectors(this.camera.position, worldPos);
+    return worldNormal.dot(toCamera) <= 0;
+  }
+
+  worldFromLocal(arr, target = new THREE.Vector3()) {
+    return target.fromArray(arr).applyMatrix4(this.pivot.matrixWorld);
+  }
+
+  /** Rotates a pivot-local direction into world space. */
+  worldDirection(arr, target = new THREE.Vector3()) {
+    return target.fromArray(arr).transformDirection(this.pivot.matrixWorld);
   }
 
   /**
@@ -579,7 +608,10 @@ export class Viewer {
    *
    * @param {{face:string, u:number, v:number}} anchor
    *        face: front | back | left | right | top; u,v: 0–1 across that face
-   * @returns {number[]|null} pivot-local [x, y, z], nudged clear of the surface
+   * @returns {{pos:number[], normal:number[]}|null} pivot-local point, nudged
+   *   clear of the surface, plus the surface normal it was found on — that
+   *   normal is what tells us later whether the marker has turned away from the
+   *   camera, without having to raycast the machine every frame.
    */
   /**
    * @param {{face:string, u:number, v:number}} anchor
@@ -635,10 +667,20 @@ export class Viewer {
     const hit = ray.intersectObject(model, true)[0];
     if (!hit) return null;
 
-    // Lift the marker clear of the skin so it is not its own occluder.
+    // Lift the marker clear of the skin so it does not occlude itself.
     const out = hit.point.clone().add(worldDir.clone().multiplyScalar(-0.055));
     this.pivot.updateWorldMatrix(true, true);
-    return this.pivot.worldToLocal(out).toArray().map(n => +n.toFixed(3));
+
+    // The ray direction is a good stand-in for the surface normal here: it is
+    // the face we deliberately aimed at, and unlike the triangle normal it is
+    // immune to a stray angled facet under the anchor point.
+    const normal = worldDir.clone().negate();
+    const inverse = new THREE.Matrix4().copy(this.pivot.matrixWorld).invert();
+
+    return {
+      pos: this.pivot.worldToLocal(out).toArray().map(n => +n.toFixed(3)),
+      normal: normal.transformDirection(inverse).toArray().map(n => +n.toFixed(3)),
+    };
   }
 
   dispose() {

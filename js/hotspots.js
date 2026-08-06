@@ -7,6 +7,7 @@
 //
 //  Place or re-place them with ?edit=hotspots — see HotspotEditor at the bottom.
 // ─────────────────────────────────────────────────────────────────────────────
+import { THREE } from './viewer.js';
 import { FEATURES, HOTSPOT_ANCHORS, HOTSPOT_POSITIONS } from './data.js';
 
 export class Hotspots {
@@ -36,14 +37,17 @@ export class Hotspots {
     const overrides = HOTSPOT_POSITIONS[modelKey] || {};
 
     // Resolve each anchor against the loaded geometry; drop any that miss.
-    const positions = {};
+    // A manual override has no surface normal, so it simply never hides.
+    const placed = {};
     Object.keys({ ...anchors, ...overrides }).forEach(id => {
-      const pos = overrides[id] || this.viewer.anchorToLocal(anchors[id], faceShift);
-      if (pos) positions[id] = pos;
+      const spot = overrides[id]
+        ? { pos: overrides[id], normal: null }
+        : this.viewer.anchorToLocal(anchors[id], faceShift);
+      if (spot) placed[id] = spot;
       else console.warn(`[typhoon] hotspot "${id}" found no surface — skipped`);
     });
 
-    Object.entries(positions).forEach(([id, pos], index) => {
+    Object.entries(placed).forEach(([id, spot], index) => {
       const feature = FEATURES[id];
       if (!feature) return;
 
@@ -69,7 +73,16 @@ export class Hotspots {
       });
 
       this.layer.appendChild(el);
-      this.items.push({ id, el, dot, world: this.viewer.worldFromLocal(pos), local: pos });
+      this.items.push({
+        id, el, dot,
+        local: spot.pos,
+        localNormal: spot.normal,
+        // Scratch objects, reused every frame instead of reallocated.
+        world: new THREE.Vector3(),
+        normal: spot.normal ? new THREE.Vector3() : null,
+        screen: {},
+        lastX: null, lastY: null, lastHidden: null,
+      });
     });
 
     // Drop the entrance class once it has had its moment, so a throttled tab
@@ -113,34 +126,58 @@ export class Hotspots {
     this.viewer.invalidate();
   }
 
-  /** Called after every render; keeps markers glued to the machine. */
+  /**
+   * Called after every render; keeps markers glued to the machine.
+   *
+   * This runs on every frame, so it does no allocation, takes one layout
+   * measurement for the whole batch, and only touches the DOM when a value
+   * actually changed.
+   */
   update() {
     if (!this.visible || !this.items.length) return;
-    const rect = this.layer.getBoundingClientRect();
+    const size = this.viewer.canvasSize;
+    if (!size.width || !size.height) return;
+
+    const marginX = size.width + 40;
+    const marginY = size.height + 40;
+    const flipX = size.width * 0.58;
+    const flipY = size.height * 0.62;
 
     for (const item of this.items) {
-      // The pivot rotates, so recompute world position each frame.
-      item.world = this.viewer.worldFromLocal(item.local);
-      const p = this.viewer.project(item.world);
+      this.viewer.worldFromLocal(item.local, item.world);
+      const p = this.viewer.project(item.world, size, item.screen);
 
-      const off = p.behind
-        || p.x < -40 || p.y < -40
-        || p.x > rect.width + 40 || p.y > rect.height + 40;
-
+      const off = p.behind || p.x < -40 || p.y < -40 || p.x > marginX || p.y > marginY;
       if (off) {
-        item.el.style.display = 'none';
+        if (item.lastHidden !== 'off') {
+          item.el.style.display = 'none';
+          item.lastHidden = 'off';
+        }
         continue;
       }
-      item.el.style.display = '';
-      item.el.style.transform = `translate3d(${p.x}px, ${p.y}px, 0)`;
+      if (item.lastHidden === 'off') {
+        item.el.style.display = '';
+        item.lastHidden = null;
+      }
 
-      // Dim markers that have rotated behind the machine.
-      const hidden = this.viewer.isOccluded(item.world);
-      item.el.classList.toggle('behind', hidden && item.id !== this.openId);
+      // Sub-pixel moves are invisible; skipping them avoids pointless layout.
+      if (Math.abs(p.x - item.lastX) > 0.4 || Math.abs(p.y - item.lastY) > 0.4) {
+        item.el.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0)`;
+        item.lastX = p.x;
+        item.lastY = p.y;
+      }
 
-      // Flip the card to whichever side has room.
-      item.el.classList.toggle('flip-x', p.x > rect.width * 0.58);
-      item.el.classList.toggle('flip-y', p.y > rect.height * 0.62);
+      // Dim markers that have rotated to the far side of the machine.
+      const away = item.normal
+        && this.viewer.facesAway(item.world, this.viewer.worldDirection(item.localNormal, item.normal));
+      const behind = Boolean(away) && item.id !== this.openId;
+      if (behind !== item.lastBehind) {
+        item.el.classList.toggle('behind', behind);
+        item.lastBehind = behind;
+      }
+
+      item.el.classList.toggle('flip-x', p.x > flipX);
+      item.el.classList.toggle('flip-y', p.y > flipY);
     }
   }
 }

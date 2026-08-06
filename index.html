@@ -126,16 +126,9 @@ header {
   cursor: grab; background: var(--bg);
 }
 #canvas-wrap:active { cursor: grabbing; }
+#canvas-wrap { background: #eceef2; }
 #canvas-wrap canvas { display: block; }
 
-/* Vignette — pulls the eye to the machine and hides the far corners of the
-   procedural room, where the geometry is coarsest. */
-#canvas-wrap::after {
-  content: ''; position: absolute; inset: 0; z-index: 4;
-  pointer-events: none;
-  background: radial-gradient(120% 95% at 50% 42%,
-              rgba(0,0,0,0) 46%, rgba(0,0,0,0.30) 78%, rgba(0,0,0,0.58) 100%);
-}
 
 /* ── Hotspots ───────────────────────────────────────────────────────────── */
 #hotspot-layer {
@@ -163,30 +156,32 @@ header {
   to   { opacity: 1; transform: scale(1); }
 }
 
-.hs.behind { opacity: 0.28; }
+.hs.behind { opacity: 0.34; }
 .hs.behind .hs-dot { pointer-events: none; }
 /* The open card must clear the other markers, which would otherwise punch
    through its text. */
 .hs.open { z-index: 3; }
 .hs.muted { opacity: 0.35; }
 
+/* Markers sit on a light backdrop, so they are light objects with dark
+   contents — a dark chip would read as a smudge on the studio sweep. */
 .hs-dot {
   position: absolute; left: -15px; top: -15px;
   width: 30px; height: 30px; border-radius: 50%;
   display: grid; place-items: center;
-  background: rgba(12,14,18,0.62);
-  border: 1px solid rgba(255,255,255,0.5);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  background: rgba(255,255,255,0.94);
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.22);
   transition: transform .2s var(--ease), background .2s, border-color .2s;
 }
-.hs-dot:hover { transform: scale(1.14); background: rgba(47,116,240,0.85); border-color: #fff; }
-.hs-glyph { font-size: 13px; line-height: 1; color: #fff; }
+.hs-dot:hover { transform: scale(1.14); background: var(--accent); border-color: var(--accent); }
+.hs-dot:hover .hs-glyph { color: #fff; }
+.hs-glyph { font-size: 13px; line-height: 1; color: #16181c; transition: color .2s; }
 
 /* Slow pulse so the markers read as "there is something here". */
 .hs-ring {
   position: absolute; inset: -1px; border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.55);
+  border: 1px solid rgba(0,0,0,0.30);
   animation: hs-pulse 3.2s ease-out infinite;
   animation-delay: calc(var(--i) * 400ms);
 }
@@ -195,16 +190,17 @@ header {
   55%, 100% { transform: scale(2.1); opacity: 0; }
 }
 .hs.open .hs-ring, .hs.behind .hs-ring { animation: none; opacity: 0; }
-.hs.open .hs-dot { background: var(--accent); border-color: #fff; transform: scale(1.05); }
+.hs.open .hs-dot { background: var(--accent); border-color: var(--accent); transform: scale(1.05); }
+.hs.open .hs-glyph { color: #fff; }
 
 .hs-card {
   position: absolute; left: 26px; top: -14px;
   width: 268px; padding: 15px 17px 16px;
-  background: var(--glass);
-  border: 1px solid var(--line-strong);
+  background: rgba(255,255,255,0.96);
+  border: 1px solid rgba(0,0,0,0.08);
   border-radius: var(--radius);
-  backdrop-filter: blur(18px) saturate(1.3);
-  box-shadow: 0 18px 50px rgba(0,0,0,0.6);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 16px 44px rgba(0,0,0,0.22);
   opacity: 0; transform: translateY(4px) scale(.97);
   transform-origin: 0 20px;
   pointer-events: none;
@@ -219,62 +215,46 @@ header {
   font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--accent); margin-bottom: 7px;
 }
-.hs-card-title { font-size: 14.5px; font-weight: 650; line-height: 1.3; margin-bottom: 7px; }
-.hs-card-text  { font-size: 12.5px; line-height: 1.55; color: var(--text-dim); }
+.hs-card-title { font-size: 14.5px; font-weight: 650; line-height: 1.3; margin-bottom: 7px; color: #14161a; }
+.hs-card-text  { font-size: 12.5px; line-height: 1.55; color: #545a63; }
 
 /* ── Floating viewport controls ─────────────────────────────────────────── */
 .dock {
   position: absolute; bottom: 18px; z-index: 8;
   display: flex; align-items: center; gap: 4px;
   padding: 5px;
-  background: var(--glass);
-  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(0,0,0,0.07);
   border-radius: 999px;
   backdrop-filter: blur(16px) saturate(1.2);
-  box-shadow: 0 10px 34px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.16);
 }
 #scene-switch { left: 18px; }
-#view-controls { right: 18px; padding: 5px 12px 5px 14px; gap: 10px; }
+#view-controls { right: 18px; padding: 5px; gap: 3px; }
 
 .scene-btn {
   display: flex; align-items: center; gap: 7px;
   padding: 6px 13px 6px 7px; border-radius: 999px;
-  font-size: 11px; font-weight: 600; color: var(--text-dim);
+  font-size: 11px; font-weight: 600; color: #62676f;
   white-space: nowrap; transition: color .18s, background .18s;
 }
-.scene-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-.scene-btn.active { color: #fff; background: rgba(255,255,255,0.10); }
+.scene-btn:hover { color: #14161a; background: rgba(0,0,0,0.05); }
+.scene-btn.active { color: #14161a; background: rgba(0,0,0,0.07); }
 .scene-chip {
   width: 17px; height: 17px; border-radius: 5px;
-  border: 1px solid rgba(255,255,255,0.18); flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.14); flex-shrink: 0;
 }
 
 .icon-btn {
   width: 30px; height: 30px; border-radius: 50%;
   display: grid; place-items: center;
-  color: var(--text-dim); font-size: 11px;
+  color: #62676f; font-size: 11px;
   border: 1px solid transparent;
   transition: all .16s;
 }
-.icon-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
-.icon-btn.on { color: var(--accent); border-color: var(--accent-soft); background: rgba(47,116,240,0.12); }
+.icon-btn:hover { background: rgba(0,0,0,0.06); color: #14161a; }
+.icon-btn.on { color: var(--accent); border-color: rgba(47,116,240,0.35); background: rgba(47,116,240,0.10); }
 
-#light-slider {
-  -webkit-appearance: none; appearance: none;
-  width: 96px; height: 3px; border-radius: 2px;
-  background: rgba(255,255,255,0.14); outline: none; cursor: pointer;
-}
-#light-slider::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%;
-  background: var(--accent); border: 2px solid #0a0b0d; cursor: pointer;
-}
-#light-slider::-moz-range-thumb {
-  width: 13px; height: 13px; border-radius: 50%;
-  background: var(--accent); border: 2px solid #0a0b0d; cursor: pointer;
-}
-#light-pct { font-size: 10px; font-weight: 600; color: var(--accent); min-width: 30px; text-align: right;
-             font-variant-numeric: tabular-nums; }
-.dock-sep { width: 1px; height: 16px; background: var(--line-strong); }
 
 /* ── Spec strip ─────────────────────────────────────────────────────────── */
 #spec-strip {
@@ -544,10 +524,13 @@ textarea.tdf-inp { height: 110px; padding: 16px 18px; resize: none; flex: 0 0 au
     position: absolute; inset: 0 0 auto 0;
     z-index: 15;
   }
+  /* The header floats over the viewport here, and the viewport is light —
+     so the wordmark has to be dark, not the sidebar's near-white. */
   .brand { min-width: 0; }
   .brand-text {
-    font-size: 12px; letter-spacing: 0.10em;
+    font-size: 12px; letter-spacing: 0.10em; color: #21242a;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.55);
   }
   .model-selector { display: none; }
   .header-right { display: none; }
@@ -580,11 +563,7 @@ textarea.tdf-inp { height: 110px; padding: 16px 18px; resize: none; flex: 0 0 au
   .scene-btn { padding: 6px 10px 6px 6px; font-size: 10.5px; }
   .scene-chip { width: 15px; height: 15px; }
 
-  #view-controls { right: 10px; padding: 5px; gap: 2px; }
-  #view-controls .tag,
-  #view-controls #light-slider,
-  #view-controls #light-pct,
-  #view-controls .dock-sep,
+  #view-controls { right: 10px; padding: 4px; gap: 2px; }
   #view-controls #reset-btn { display: none; }
 
   .hs-card { width: min(74vw, 260px); }
@@ -682,11 +661,6 @@ textarea.tdf-inp { height: 110px; padding: 16px 18px; resize: none; flex: 0 0 au
       <div class="dock" id="scene-switch" role="group" aria-label="Scene"></div>
 
       <div class="dock" id="view-controls">
-        <span class="tag">Light</span>
-        <input type="range" id="light-slider" min="0" max="100" value="40" step="1"
-               aria-label="Light direction">
-        <span id="light-pct">40%</span>
-        <div class="dock-sep"></div>
         <button class="icon-btn on" id="rotate-btn" aria-label="Pause rotation">❙❙</button>
         <button class="icon-btn on" id="hotspot-btn" aria-pressed="true"
                 aria-label="Toggle feature markers" title="Feature markers">ⓘ</button>

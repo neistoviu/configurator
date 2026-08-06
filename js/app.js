@@ -274,15 +274,13 @@ function setRotate(on) {
   btn.setAttribute('aria-label', on ? 'Pause rotation' : 'Resume rotation');
 }
 
+// The light rig sits at the angle that flatters the machine best; it is not
+// something a visitor should have to think about.
+const LIGHT_ANGLE_PCT = 40;
+
 function bindViewportControls() {
   $('rotate-btn').addEventListener('click', () => setRotate(!viewer.controls.autoRotate));
-
-  $('light-slider').addEventListener('input', e => {
-    const pct = Number(e.target.value);
-    viewer.setLightAngle(pct * 3.6);
-    $('light-pct').textContent = pct + '%';
-  });
-  viewer.setLightAngle(Number($('light-slider').value) * 3.6);
+  viewer.setLightAngle(LIGHT_ANGLE_PCT * 3.6);
 
   const hsBtn = $('hotspot-btn');
   hsBtn.addEventListener('click', () => {

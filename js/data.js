@@ -210,84 +210,57 @@ export const HOTSPOT_POSITIONS = {
 // Every preset is generated procedurally at runtime — no image downloads.
 // Drop a real photo in later by adding `envUrl: 'scenes/whatever.jpg'`
 // (equirectangular 2:1); the viewer will use it instead of the procedural one.
-// Room shell is 22 m wide × 24 m deep × 6.4 m high (see scene-presets.js ROOM),
-// so walls sit at x = ±11 and z = ±12. Fixtures are placed just inside those.
+// ── Backdrops ────────────────────────────────────────────────────────────────
+//  backdrop  gradient behind the machine, top → bottom
+//  env       gradient of the offscreen lightbox (drives reflections); falls
+//            back to `backdrop` when omitted
+//  lights    softbox panels — reflections only, never drawn on screen
+//
+//  Two are offered for a reason: a white machine on a white backdrop
+//  disappears, so light paint needs the graphite option and vice versa.
 export const SCENES = {
-  studio: {
-    label: 'Studio',
-    hint: 'Neutral light — truest colour match',
-    // Wall gradient, top → bottom.
-    backdrop: ['#1b1e24', '#111318', '#08090b'],
-    ceiling: '#0a0b0e',
-    floor: { color: '#0f1013', roughness: 0.30, metalness: 0.20 },
-    exposure: 1.20,
-    envIntensity: 1.15,
-    fog: { color: '#0b0c0f', near: 6, far: 20 },
-    hideLights: true,
-    // Big softboxes — this is what you see mirrored in the steel.
+  light: {
+    label: 'Light',
+    hint: 'Studio white — truest colour match',
+    backdrop: ['#ffffff', '#f0f1f4', '#dcdfe5'],
+    env:      ['#ffffff', '#eef0f4', '#c9ced7'],
+    floor: { color: '#eceef2', roughness: 0.55, metalness: 0.06 },
+    exposure: 1.0,
+    envIntensity: 1.0,
+    shadowOpacity: 0.30,
+    fog: { color: '#e4e7ec', near: 9, far: 24 },
     lights: [
-      { type: 'panel', pos: [ 5.0, 3.4,  4.0], size: [5.0, 3.6], color: '#ffffff', power: 6.5 },
-      { type: 'panel', pos: [-5.6, 3.0, -2.0], size: [4.4, 3.4], color: '#dce8ff', power: 3.0 },
-      { type: 'panel', pos: [ 0.0, 6.2,  0.5], size: [8.0, 6.0], color: '#ffffff', power: 1.8, faceDown: true },
+      { pos: [ 4.5, 3.4,  3.6], size: [5.5, 4.0], color: '#ffffff', power: 5.0 },
+      { pos: [-5.0, 2.8, -1.6], size: [4.5, 3.6], color: '#f2f6ff', power: 2.6 },
+      { pos: [ 0.0, 6.0,  0.4], size: [9.0, 7.0], color: '#ffffff', power: 2.0, faceDown: true },
     ],
-    key:  { color: '#fff7ee', intensity: 2.6, pos: [ 5, 8,  6] },
-    fill: { color: '#dbe8ff', intensity: 1.1, pos: [-6, 4, -4] },
-    rim:  { color: '#ffffff', intensity: 1.4, pos: [ 0, 3, -8] },
+    key:  { color: '#fffaf4', intensity: 2.2, pos: [ 5, 8,  6] },
+    fill: { color: '#eef4ff', intensity: 1.0, pos: [-6, 4, -4] },
+    rim:  { color: '#ffffff', intensity: 0.8, pos: [ 0, 3, -8] },
   },
 
-  roastery: {
-    label: 'Roastery',
-    hint: 'Industrial hall — daylight from tall windows',
-    backdrop: ['#3a3f47', '#252930', '#171a1e'],
-    ceiling: '#15171b',
-    floor: { color: '#3c3c3f', roughness: 0.66, metalness: 0.05 },
+  graphite: {
+    label: 'Graphite',
+    hint: 'Neutral grey — for pale and white paint',
+    backdrop: ['#8f949c', '#6d727a', '#4b4f56'],
+    env:      ['#a8adb5', '#7b8088', '#43464c'],
+    floor: { color: '#5e626a', roughness: 0.5, metalness: 0.08 },
     exposure: 1.05,
-    envIntensity: 1.25,
-    fog: { color: '#262a31', near: 8, far: 27 },
+    envIntensity: 1.05,
+    shadowOpacity: 0.34,
+    fog: { color: '#5a5e65', near: 9, far: 24 },
     lights: [
-      // Tall daylight windows down the left wall.
-      { type: 'panel', pos: [-10.7, 3.3,  4.5], size: [2.4, 4.2], color: '#d5e7ff', power: 9.0 },
-      { type: 'panel', pos: [-10.7, 3.3,  0.0], size: [2.4, 4.2], color: '#d5e7ff', power: 9.0 },
-      { type: 'panel', pos: [-10.7, 3.3, -4.5], size: [2.4, 4.2], color: '#d5e7ff', power: 9.0 },
-      // Industrial ceiling strips.
-      { type: 'panel', pos: [ 0.0, 6.15,  2.5], size: [11.0, 0.55], color: '#fff3df', power: 4.0, faceDown: true },
-      { type: 'panel', pos: [ 0.0, 6.15, -3.5], size: [11.0, 0.55], color: '#fff3df', power: 4.0, faceDown: true },
-      // Warm wash on the right-hand wall.
-      { type: 'panel', pos: [ 10.6, 2.4, -1.0], size: [7.0, 4.0], color: '#7d6047', power: 1.1 },
+      { pos: [ 4.5, 3.4,  3.6], size: [5.5, 4.0], color: '#ffffff', power: 5.5 },
+      { pos: [-5.0, 2.8, -1.6], size: [4.5, 3.6], color: '#e8f0ff', power: 2.4 },
+      { pos: [ 0.0, 6.0,  0.4], size: [9.0, 7.0], color: '#ffffff', power: 1.6, faceDown: true },
     ],
-    key:  { color: '#e9f2ff', intensity: 3.2, pos: [-7, 8,  4] },
-    fill: { color: '#ffd9a8', intensity: 1.0, pos: [ 6, 4, -3] },
-    rim:  { color: '#ffffff', intensity: 1.3, pos: [ 0, 3, -8] },
-    props: 'warehouse',
-  },
-
-  cafe: {
-    label: 'Café',
-    hint: 'Warm interior — roast-in-shop look',
-    backdrop: ['#4b3a2e', '#2c221b', '#181210'],
-    ceiling: '#171110',
-    floor: { color: '#46341f', roughness: 0.46, metalness: 0.04 },
-    exposure: 1.05,
-    envIntensity: 1.30,
-    fog: { color: '#241b15', near: 7, far: 24 },
-    lights: [
-      // Warm pendants over the bar.
-      { type: 'sphere', pos: [-2.4, 4.7, 1.4], size: [0.32], color: '#ffb35e', power: 26 },
-      { type: 'sphere', pos: [ 2.4, 4.7, 1.4], size: [0.32], color: '#ffb35e', power: 26 },
-      { type: 'sphere', pos: [ 0.0, 4.9, -2.6], size: [0.28], color: '#ffc98a', power: 18 },
-      // Shopfront daylight on the right.
-      { type: 'panel', pos: [ 10.6, 2.6, 1.5], size: [8.0, 4.4], color: '#eaf3ff', power: 3.0 },
-      // Warm bounce off the left wall.
-      { type: 'panel', pos: [-10.6, 2.2, -1.0], size: [6.0, 3.4], color: '#a06a41', power: 1.6 },
-    ],
-    key:  { color: '#ffe3bd', intensity: 1.9, pos: [ 7, 6,  5] },
-    fill: { color: '#ffc99a', intensity: 0.9, pos: [-5, 3, -3] },
-    rim:  { color: '#dceaff', intensity: 1.1, pos: [ 0, 3, -8] },
-    props: 'cafe',
+    key:  { color: '#fff8ef', intensity: 2.5, pos: [ 5, 8,  6] },
+    fill: { color: '#e6eeff', intensity: 1.0, pos: [-6, 4, -4] },
+    rim:  { color: '#ffffff', intensity: 1.1, pos: [ 0, 3, -8] },
   },
 };
 
-export const DEFAULT_SCENE = 'roastery';
+export const DEFAULT_SCENE = 'light';
 
 // ── Colour presets ───────────────────────────────────────────────────────────
 // One-click combinations so a visitor sees a good-looking machine immediately
