@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Export baked models</title>
+<style>
+  body { font: 14px/1.6 ui-sans-serif, system-ui, sans-serif;
+         background:#0b0c0f; color:#e8e9ec; padding:28px; }
+  h1 { font-size:17px; margin-bottom:6px; }
+  p.hint { color:#9498a2; max-width:640px; margin-bottom:18px; }
+  #log { font:12px/1.7 ui-monospace, Menlo, monospace; white-space:pre-wrap;
+         background:#111318; border:1px solid rgba(255,255,255,.09);
+         border-radius:10px; padding:14px; }
+  .ok { color:#6ee7a0; } .bad { color:#fca5a5; }
+  #stage { width:640px; height:400px; margin-top:18px;
+           border:1px solid rgba(255,255,255,.09); border-radius:10px; overflow:hidden; }
+</style>
+</head>
+<body>
+<h1>Export baked GLB models</h1>
+<p class="hint">
+  Loads each roaster exactly as the configurator does — same config, same
+  material rules, same default paint — then exports a self-contained GLB with
+  those colours baked in. The result needs no config file and no recolouring
+  code: drop it into any 3D viewer and it looks right.
+  <br><br>
+  Geometry comes out uncompressed here; run
+  <code>scripts/bake-models.sh</code> afterwards to re-compress.
+</p>
+<div id="log">starting…</div>
+<div id="stage"></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.min.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { Viewer } from '../js/viewer.js';
+import { MODELS, ralByCode } from '../js/data.js';
+
+const log = document.getElementById('log');
+const say = (msg, cls = '') => {
+  log.insertAdjacentHTML('beforeend', `\n<span class="${cls}">${msg}</span>`);
+};
+
+const viewer = new Viewer(document.getElementById('stage'));
+await viewer.applyScene('studio');
+
+const exporter = new GLTFExporter();
+const KEYS = ['10pro', '5pro', '2pro'];
+
+for (const key of KEYS) {
+  const def = MODELS[key];
+  say(`\n── ${def.label}`);
+
+  const cfg = await fetch('../' + def.config).then(r => r.json());
+  if (def.faceYaw !== undefined) cfg.initialRotationY = def.faceYaw;
+
+  const stats = await viewer.loadModel('../' + def.file, cfg, {});
+  if (def.defaultBody) viewer.setGroupColor('body', ralByCode(def.defaultBody).hex);
+  if (def.defaultAccent) viewer.setGroupColor('accent', ralByCode(def.defaultAccent).hex);
+  say(`   ${stats.mergedFrom} meshes merged to ${stats.drawMeshes}`);
+  say(`   body ${def.defaultBody || '(from config)'} · accent ${def.defaultAccent || '(from config)'}`);
+
+  // Export the pivot: that carries the front-facing rotation and puts the
+  // machine's feet on y = 0. The contact shadow is a UI prop, not part of it.
+  viewer.contactShadow.removeFromParent();
+  const buffer = await exporter.parseAsync(viewer.pivot, { binary: true });
+  viewer.pivot.add(viewer.contactShadow);
+
+  const mb = (buffer.byteLength / 1e6).toFixed(1);
+  const name = `typhoon-${key}-baked.glb`;
+  const url = URL.createObjectURL(new Blob([buffer], { type: 'model/gltf-binary' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  say(`   ✔ downloaded ${name} (${mb} MB uncompressed)`, 'ok');
+}
+
+say('\nAll three exported. Now run: ./scripts/bake-models.sh', 'ok');
+</script>
+</body>
+</html>

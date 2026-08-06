@@ -3,10 +3,25 @@
 README.md
 scripts/
 
-# Source / backup GLB files kept locally for rollback and future re-optimization.
+# The previous single-file configurator, kept for side-by-side comparison
+# while the new one is being reviewed. Not deployed.
+legacy.html
+
+# Source / backup GLB files kept locally for rollback and re-optimization.
 1_original_backup.glb
 1.glb
 new-roaster-1.glb
 new-roaster-2.glb
 new-roaster-3.glb
 2.5.glb
+
+# Superseded by the *.opt.glb builds. Delete once the new page is live.
+2.5.web.glb
+2.5.mobile.glb
+new-roaster-2.web.glb
+new-roaster-2.mobile.glb
+new-roaster-3.web.glb
+new-roaster-3.mobile.glb
+
+# Standalone models for embedding elsewhere — not part of the configurator page.
+dist-baked/

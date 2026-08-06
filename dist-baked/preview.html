@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typhoon roasters — embeddable 3D</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0b0c0f; color:#e8e9ec;
+         font:14px/1.6 ui-sans-serif, -apple-system, system-ui, sans-serif; }
+  header { padding:22px 24px 14px; }
+  h1 { font-size:16px; font-weight:650; letter-spacing:.01em; }
+  p  { color:#9498a2; font-size:13px; margin-top:4px; }
+  .tabs { display:flex; gap:6px; padding:0 24px 14px; }
+  .tab { padding:7px 15px; border-radius:999px; border:1px solid rgba(255,255,255,.12);
+         background:none; color:#9498a2; font:inherit; font-size:12px; font-weight:600;
+         cursor:pointer; }
+  .tab.on { background:#2f74f0; border-color:#2f74f0; color:#fff; }
+  #stage { width:100%; height:min(70vh, 620px); cursor:grab; }
+  #stage:active { cursor:grabbing; }
+  footer { padding:10px 24px 24px; color:#5c6069; font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Typhoon roasters — standalone 3D files</h1>
+  <p>Colours are baked into each file. No config, no recolouring code — this page
+     is the whole integration.</p>
+</header>
+<div class="tabs" id="tabs"></div>
+<div id="stage"></div>
+<footer id="meta"></footer>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.min.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const MODELS = [
+  { key: '10pro', label: 'Typhoon 10 PRO', file: 'typhoon-10pro.glb' },
+  { key: '5pro',  label: 'Typhoon 5 PRO',  file: 'typhoon-5pro.glb' },
+  { key: '2pro',  label: 'Typhoon 2.5 PRO', file: 'typhoon-2pro.glb' },
+];
+
+const stage = document.getElementById('stage');
+// Falling back to 1 keeps the aspect ratio finite: if the container is still
+// 0×0 on the first frame (hidden tab, layout pending), a NaN aspect quietly
+// produces a NaN camera and a black canvas.
+const dims = () => [stage.clientWidth || 1, stage.clientHeight || 1];
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(...dims());
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0c0f);
+
+// Built-in studio environment — gives the steel and glass something to reflect.
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+scene.add(new THREE.DirectionalLight(0xffffff, 1.6).translateY(4));
+
+const camera = new THREE.PerspectiveCamera(38, dims()[0] / dims()[1], 0.05, 100);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.7;
+controls.maxPolarAngle = 0.52 * Math.PI;
+
+const draco = new DRACOLoader()
+  .setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/libs/draco/');
+const loader = new GLTFLoader().setDRACOLoader(draco);
+
+let current = null;
+
+/** Fits the machine to the viewport on both axes and picks a 3/4 view. */
+function frame() {
+  if (!current) return;
+  const size = new THREE.Box3().setFromObject(current).getSize(new THREE.Vector3());
+  const fovV = THREE.MathUtils.degToRad(camera.fov);
+  const aspect = Number.isFinite(camera.aspect) && camera.aspect > 0 ? camera.aspect : 1;
+  const fovH = 2 * Math.atan(Math.tan(fovV / 2) * aspect);
+  const dist = Math.max(
+    (size.y / 2) / Math.tan(fovV / 2),
+    (Math.max(size.x, size.z) / 2) / Math.tan(fovH / 2)) * 1.35;
+  controls.target.set(0, size.y * 0.5, 0);
+  camera.position.set(dist * 0.38, size.y * 0.72, dist * 0.9);
+  controls.update();
+}
+
+async function show(model) {
+  document.querySelectorAll('.tab').forEach(t =>
+    t.classList.toggle('on', t.dataset.key === model.key));
+  document.getElementById('meta').textContent = `Loading ${model.file}…`;
+
+  const t0 = performance.now();
+  const gltf = await loader.loadAsync(model.file);
+  if (current) scene.remove(current);
+  current = gltf.scene;
+  scene.add(current);
+
+  lastModel = model;
+  frame(model);
+
+  let meshes = 0, tris = 0;
+  current.traverse(o => {
+    if (!o.isMesh) return;
+    meshes++;
+    tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3;
+  });
+  document.getElementById('meta').textContent =
+    `${model.file} — ${meshes} meshes, ${Math.round(tris).toLocaleString()} triangles, `
+    + `loaded in ${Math.round(performance.now() - t0)} ms`;
+}
+
+document.getElementById('tabs').innerHTML = MODELS.map((m, i) =>
+  `<button class="tab${i === 0 ? ' on' : ''}" data-key="${m.key}">${m.label}</button>`).join('');
+document.querySelectorAll('.tab').forEach((tab, i) =>
+  tab.addEventListener('click', () => show(MODELS[i])));
+
+let lastModel = MODELS[0];
+function resize() {
+  const [w, h] = dims();
+  const wasBroken = !Number.isFinite(camera.aspect) || camera.aspect <= 0;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  if (wasBroken && lastModel) frame(lastModel);
+}
+addEventListener('resize', resize);
+new ResizeObserver(resize).observe(stage);
+
+renderer.setAnimationLoop(() => {
+  controls.update();
+  renderer.render(scene, camera);
+});
+
+show(MODELS[0]);
+</script>
+</body>
+</html>

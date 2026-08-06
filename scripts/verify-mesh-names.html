@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mesh name parity check</title>
+<style>
+  body { font: 13px/1.5 ui-monospace, Menlo, monospace; background:#111; color:#ddd; padding:24px; }
+  h2 { font-size: 15px; margin: 22px 0 6px; }
+  .ok  { color:#6ee7a0; } .bad { color:#fca5a5; } .dim { color:#777; }
+  pre { white-space: pre-wrap; margin: 4px 0 0; }
+</style>
+</head>
+<body>
+<h1 style="font-size:16px">Source GLB vs optimized GLB — runtime mesh names</h1>
+<p class="dim">Loads both files through the real GLTFLoader and diffs the names
+the configurator would see. Serve from the project root:
+<code>npx serve . -l 8788</code> → <code>/scripts/verify-mesh-names.html</code></p>
+<div id="out"></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.min.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader }  from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+const PAIRS = [
+  ['Typhoon 10 PRO', '../new-roaster-3.glb', '../10pro.opt.glb', '../config-10pro.json'],
+  ['Typhoon 5 PRO',  '../new-roaster-2.glb', '../5pro.opt.glb',  '../config-5pro.json'],
+  ['Typhoon 2.5 PRO','../2.5.glb',           '../2pro.opt.glb',  '../config-2pro.json'],
+];
+
+const draco = new DRACOLoader();
+draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/libs/draco/');
+const loader = new GLTFLoader().setDRACOLoader(draco);
+
+const meshNames = url => new Promise((res, rej) =>
+  loader.load(url, g => {
+    const names = [];
+    g.scene.traverse(o => { if (o.isMesh) names.push(o.name); });
+    res(names);
+  }, undefined, rej));
+
+const out = document.getElementById('out');
+const log = html => { out.insertAdjacentHTML('beforeend', html); };
+
+for (const [label, srcUrl, optUrl, cfgUrl] of PAIRS) {
+  log(`<h2>${label}</h2>`);
+  try {
+    const [src, opt, cfg] = await Promise.all([
+      meshNames(srcUrl), meshNames(optUrl), fetch(cfgUrl).then(r => r.json()),
+    ]);
+    const assigned = new Set(
+      ['body','accent','glass','steel','wood','skip'].flatMap(g => cfg[g] || []));
+    const optSet = new Set(opt);
+    const lost    = src.filter(n => !optSet.has(n));
+    const gained  = opt.filter(n => !new Set(src).has(n));
+    const missing = [...assigned].filter(n => !optSet.has(n));
+
+    const good = !lost.length && !gained.length && !missing.length;
+    log(`<pre>meshes: source ${src.length} → optimized ${opt.length}
+config assigns ${assigned.size}
+<span class="${lost.length    ? 'bad' : 'ok'}">renamed/lost vs source : ${lost.length}    ${lost.slice(0,8).join(', ')}</span>
+<span class="${gained.length  ? 'bad' : 'ok'}">new names vs source    : ${gained.length}  ${gained.slice(0,8).join(', ')}</span>
+<span class="${missing.length ? 'bad' : 'ok'}">config names not found : ${missing.length} ${missing.slice(0,8).join(', ')}</span>
+<b class="${good ? 'ok' : 'bad'}">${good ? '✔ PARITY — config-*.json still applies cleanly' : '✘ MISMATCH — do not ship'}</b></pre>`);
+  } catch (e) {
+    log(`<pre class="bad">load failed: ${e.message}</pre>`);
+  }
+}
+log('<p class="dim">done.</p>');
+</script>
+</body>
+</html>

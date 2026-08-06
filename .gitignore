@@ -2,3 +2,6 @@
 Thumbs.db
 *.code-workspace
 1_original_backup.glb
+
+# Intermediate exports from scripts/export-baked.html live in ~/Downloads;
+# the compressed results are committed under dist-baked/.
