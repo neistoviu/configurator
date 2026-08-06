@@ -3,21 +3,19 @@
   "outputDirectory": ".",
   "headers": [
     {
-      "//": "Models are the heavy part of the page and are rebuilt under a new name when they change, so a repeat visitor should never re-fetch or even re-validate them.",
-      "source": "/(.*).glb",
+      "source": "/(.*)\\.glb",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "//": "Code and configs are small: serve from cache instantly, refresh in the background.",
       "source": "/js/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=600, stale-while-revalidate=86400" }
       ]
     },
     {
-      "source": "/(.*).json",
+      "source": "/(.*)\\.json",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=600, stale-while-revalidate=86400" }
       ]

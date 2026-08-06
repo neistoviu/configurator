@@ -148,9 +148,14 @@ console.log((performance.now() - t0) / 30, 'ms/frame');
 ## Deployment
 
 Static site on Vercel; the project root is the output directory. `vercel.json`
-marks the models as immutable so returning visitors never re-download them —
-which means **a changed model must be given a new filename**, otherwise browsers
-will keep serving the old one for a year.
+marks the models as immutable so returning visitors never re-download or even
+re-validate them — which means **a changed model must be given a new filename**,
+otherwise browsers will keep serving the old one for a year. Code and configs
+get a short cache with background revalidation instead.
+
+`vercel.json` is schema-validated on every deploy and **rejects keys it does not
+recognise**, so it cannot carry `"//"` comments — a stray one fails the build
+with nothing rendered on the site. Explain things here instead.
 
 `.vercelignore` keeps source GLBs, the legacy page, and local tooling out of
 production.
