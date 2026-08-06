@@ -282,6 +282,14 @@ export class Viewer {
 
   _install(gltf, cfg, opts) {
     const model = gltf.scene;
+    // Box3.setFromObject deliberately does not refresh ancestor matrices, so
+    // the pivot has to be flushed by hand — otherwise every measurement below
+    // is taken against the *previous* model's offset and the machine drifts a
+    // little further off the floor with each switch.
+    this.pivot.position.set(0, 0, 0);
+    this.pivot.rotation.set(0, 0, 0);
+    this.pivot.updateMatrixWorld(true);
+
     this.pivot.add(model);
     this.currentGltf = gltf;
 
@@ -376,14 +384,21 @@ export class Viewer {
       -center.z + (Number(off.z) || 0),
     );
     model.scale.setScalar(opts.displayScale || 1);
-    model.updateMatrixWorld(true);
+    // updateWorldMatrix(true, true) refreshes ancestors as well as descendants.
+    // updateMatrixWorld() only walks down, which would leave the pivot's matrix
+    // stale — and the merge below would then bake that staleness into vertices.
+    model.updateWorldMatrix(true, true);
 
     this.stats.mergedFrom = meshes.length;
     this.stats.drawMeshes = MERGE_DRAW_CALLS
       ? this._mergeByMaterial(model)
       : meshes.length;
 
-    // Sit the machine on the floor.
+    // Sit the machine on the floor. The merge above added brand-new meshes
+    // whose world matrices have never been computed, and Box3 would happily
+    // measure them at the origin — so refresh from a known-zero pivot first.
+    this.pivot.position.set(0, 0, 0);
+    model.updateWorldMatrix(true, true);
     const finalBox = new THREE.Box3().setFromObject(model);
     const floorY = finalBox.min.y;
     const finalSize = finalBox.getSize(new THREE.Vector3());
@@ -412,7 +427,9 @@ export class Viewer {
   _mergeByMaterial(model) {
     const buckets = new Map();
     let total = 0;
-    model.updateMatrixWorld(true);
+    // Ancestors included: `model` and its meshes must agree on world space, or
+    // the relative matrix below picks up the difference and bakes it in.
+    model.updateWorldMatrix(true, true);
 
     // Merged vertices are baked relative to `model`, not to the world, because
     // the merged mesh is re-parented under `model` and would otherwise pick up
@@ -442,7 +459,6 @@ export class Viewer {
         if (src.index) g.setIndex(src.index.clone());
         const nrm = src.getAttribute('normal');
         if (nrm) g.setAttribute('normal', nrm.clone());
-        mesh.updateWorldMatrix(true, false);
         g.applyMatrix4(
           new THREE.Matrix4().multiplyMatrices(toModelSpace, mesh.matrixWorld));
         if (!nrm) g.computeVertexNormals();
@@ -574,8 +590,13 @@ export class Viewer {
     const model = this.pivot.children.find(c => c !== this.contactShadow);
     if (!model || !anchor) return null;
 
-    this.pivot.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(model);
+    // Work in the model's own axes, not the world's: the pivot carries the
+    // opening camera rotation, and an anchor called "front" must mean the
+    // machine's front regardless of how it happens to be turned right now.
+    model.updateWorldMatrix(true, true);
+    const toWorld = model.matrixWorld;
+    const toLocal = new THREE.Matrix4().copy(toWorld).invert();
+    const box = new THREE.Box3().setFromObject(model).applyMatrix4(toLocal);
     const size = box.getSize(new THREE.Vector3());
     const lerp = (a, b, t) => a + (b - a) * t;
     const pad = Math.max(size.x, size.y, size.z);
@@ -606,12 +627,17 @@ export class Viewer {
       dir = new THREE.Vector3(-sign, 0, 0);
     }
 
-    const ray = new THREE.Raycaster(origin, dir.normalize(), 0, pad * 3);
+    // Raycasting happens in world space, so carry the ray over.
+    const worldOrigin = origin.clone().applyMatrix4(toWorld);
+    const worldDir = dir.clone().transformDirection(toWorld).normalize();
+
+    const ray = new THREE.Raycaster(worldOrigin, worldDir, 0, pad * 3);
     const hit = ray.intersectObject(model, true)[0];
     if (!hit) return null;
 
     // Lift the marker clear of the skin so it is not its own occluder.
-    const out = hit.point.clone().add(dir.clone().multiplyScalar(-0.055));
+    const out = hit.point.clone().add(worldDir.clone().multiplyScalar(-0.055));
+    this.pivot.updateWorldMatrix(true, true);
     return this.pivot.worldToLocal(out).toArray().map(n => +n.toFixed(3));
   }
 
